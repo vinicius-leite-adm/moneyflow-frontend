@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Money Flow · Simulador Home Equity</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ── DARK THEME (default) ── */
+[data-theme="dark"]{
+  --bg:#0f0f0e;--bg2:#161614;--surface:#1e1e1b;--surface2:#252521;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#f0ede6;--text2:#a09d94;--text3:#5a5750;
+  --shadow:rgba(0,0,0,0.4);
+  --gold:#c9a84c;--gold-bg:rgba(201,168,76,0.12);--gold-border:rgba(201,168,76,0.3);
+  --green:#4caf7d;--green-bg:rgba(76,175,125,0.1);
+  --red:#e05c5c;--red-bg:rgba(224,92,92,0.1);
+  --blue:#5b9bd5;--blue-bg:rgba(91,155,213,0.1);
+  --warn:#e0a94c;--warn-bg:rgba(224,169,76,0.1);
+  --purple:#a78bfa;--purple-bg:rgba(167,139,250,0.1);--purple-border:rgba(167,139,250,0.25);
+}
+
+/* ── LIGHT THEME ── */
+[data-theme="light"]{
+  --bg:#f5f4f0;--bg2:#ffffff;--surface:#ffffff;--surface2:#f0eeea;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
+  --text:#1a1916;--text2:#5a5750;--text3:#9a9790;
+  --shadow:rgba(0,0,0,0.1);
+  --gold:#9a7a2a;--gold-bg:rgba(154,122,42,0.08);--gold-border:rgba(154,122,42,0.25);
+  --green:#2d8a5a;--green-bg:rgba(45,138,90,0.08);
+  --red:#c03a3a;--red-bg:rgba(192,58,58,0.08);
+  --blue:#2d6fa8;--blue-bg:rgba(45,111,168,0.08);
+  --warn:#a87a2d;--warn-bg:rgba(168,122,45,0.08);
+  --purple:#6d4fc9;--purple-bg:rgba(109,79,201,0.08);--purple-border:rgba(109,79,201,0.2);
+}
+
+:root{
+  --radius:8px;--radius-lg:12px;--radius-xl:16px;
+  --font-display:"DM Serif Display",Georgia,serif;
+  --font:"DM Sans",system-ui,sans-serif;
+}
+
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5;transition:background 0.2s,color 0.2s}
+.shell{display:grid;grid-template-columns:270px 1fr;min-height:100vh}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;transition:background 0.2s}
+.main{padding:2rem 2.5rem;overflow-y:auto;min-height:100vh}
+
+/* LOGO */
+.logo-area{padding:1.1rem 1.25rem 0.9rem;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.logo-area img{height:50px;width:auto;object-fit:contain;mix-blend-mode:multiply}
+[data-theme="dark"] .logo-area img{mix-blend-mode:normal;filter:brightness(1)}
+[data-theme="light"] .logo-area img{mix-blend-mode:multiply}
+.logo-sub{font-size:10px;color:var(--text3);margin-top:2px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;display:block}
+
+/* THEME TOGGLE */
+.theme-toggle{width:32px;height:32px;border-radius:50%;border:0.5px solid var(--border2);background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;transition:all 0.15s;color:var(--text2)}
+.theme-toggle:hover{background:var(--gold-bg);border-color:var(--gold-border);color:var(--gold)}
+
+/* NAV */
+.nav{padding:0.75rem 0.75rem;flex:1;overflow-y:auto}
+.nav-label{font-size:10px;font-weight:600;letter-spacing:0.1em;color:var(--text3);text-transform:uppercase;padding:0 0.5rem;margin:0.75rem 0 0.25rem;display:flex;align-items:center;justify-content:space-between}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--radius);cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;transition:all 0.15s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--gold-bg);color:var(--gold);border:0.5px solid var(--gold-border)}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.nav-item.ai-nav.active{background:var(--purple-bg);color:var(--purple);border:0.5px solid var(--purple-border)}
+.nav-item.ai-nav:hover{color:var(--purple)}
+
+/* FICHA ITEMS */
+.ficha-item{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:var(--radius);cursor:pointer;color:var(--text2);font-size:12px;transition:all 0.15s;border:none;background:none;width:100%;text-align:left}
+.ficha-item:hover{background:var(--surface2);color:var(--text)}
+.ficha-item.active-ficha{background:var(--surface2);color:var(--text);border:0.5px solid var(--border2)}
+.ficha-avatar{width:26px;height:26px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--text2);flex-shrink:0;text-transform:uppercase;border:0.5px solid var(--border)}
+.ficha-info{flex:1;min-width:0}
+.ficha-nome{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ficha-meta{font-size:10px;color:var(--text3)}
+.ficha-actions{display:flex;gap:3px;flex-shrink:0}
+.ficha-btn{width:22px;height:22px;border-radius:5px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all 0.15s}
+.ficha-btn-edit{background:var(--gold-bg);color:var(--gold)}
+.ficha-btn-edit:hover{filter:brightness(1.2)}
+.ficha-btn-del{background:var(--red-bg);color:var(--red)}
+.ficha-btn-del:hover{filter:brightness(1.2)}
+
+/* SIDEBAR FOOTER */
+.sidebar-footer{padding:1rem 1.25rem;border-top:1px solid var(--border);flex-shrink:0}
+.consultant-tag{display:flex;align-items:center;gap:8px}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--gold)}
+.consultant-info .name{font-size:12px;font-weight:500;color:var(--text)}
+.consultant-info .role{font-size:11px;color:var(--text3)}
+
+/* PAGE */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.75rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+.page-title{font-family:var(--font-display);font-size:26px;color:var(--text);letter-spacing:-0.02em}
+.page-subtitle{font-size:13px;color:var(--text2);margin-top:3px}
+.status-pill{display:flex;align-items:center;gap:6px;background:var(--green-bg);border:0.5px solid rgba(76,175,125,0.25);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--green);font-weight:500;white-space:nowrap}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.ai-pill{background:var(--purple-bg);border:0.5px solid var(--purple-border);color:var(--purple)}
+.ai-pill .status-dot{background:var(--purple)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:1.5rem;background:var(--surface2);border-radius:var(--radius);padding:4px}
+.tab{padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border:none;background:none;transition:all 0.15s}
+.tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px var(--shadow)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* SECTIONS */
+.section{margin-bottom:1.5rem}
+.section-title{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:0.75rem;display:flex;align-items:center;gap:6px}
+.section-title::after{content:"";flex:1;height:1px;background:var(--border)}
+
+/* FORMS */
+.form-grid{display:grid;gap:12px}
+.cols-2{grid-template-columns:1fr 1fr}.cols-3{grid-template-columns:1fr 1fr 1fr}.span-2{grid-column:span 2}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:8px 10px;background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:13px;outline:none;transition:border-color 0.15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
+.field select option{background:var(--surface2);color:var(--text)}
+.prefix-wrap{position:relative}
+.pfx{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text3);pointer-events:none}
+.prefix-wrap input{padding-left:26px}
+.field textarea{resize:vertical;min-height:60px;line-height:1.4}
+
+/* ALERTS */
+.alert{border-radius:var(--radius);padding:10px 14px;font-size:12px;margin-bottom:8px;display:flex;align-items:flex-start;gap:8px}
+.alert-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.alert.warn{background:var(--warn-bg);border:0.5px solid rgba(168,122,45,0.25);color:var(--warn)}
+.alert.danger{background:var(--red-bg);border:0.5px solid rgba(192,58,58,0.25);color:var(--red)}
+.alert.info{background:var(--blue-bg);border:0.5px solid rgba(45,111,168,0.25);color:var(--blue)}
+.alert.success{background:var(--green-bg);border:0.5px solid rgba(45,138,90,0.25);color:var(--green)}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.5rem}
+.metric{background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px}
+.metric .lbl{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
+.metric .val{font-size:22px;font-weight:600;color:var(--text);letter-spacing:-0.02em}
+.metric .val.gold{color:var(--gold)}.metric .val.green{color:var(--green)}.metric .val.red{color:var(--red)}
+.metric .sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* RESULT COLUMNS LAYOUT */
+.result-cols{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:0.5rem}
+.result-col{min-width:0}
+.result-col-header{font-size:13px;font-weight:600;color:var(--text);margin-bottom:1rem;padding-bottom:0.6rem;border-bottom:2px solid var(--gold-border);display:flex;align-items:center;gap:8px}
+.result-col-header .col-icon{width:24px;height:24px;border-radius:6px;background:var(--gold-bg);display:flex;align-items:center;justify-content:center;font-size:12px}
+
+/* BANK CARDS */
+.bank-card{background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--radius-xl);padding:1rem;margin-bottom:10px;transition:border-color 0.2s}
+.bank-card:hover{border-color:var(--border2)}
+.bank-card.top{border-color:var(--gold-border);background:var(--gold-bg)}
+.bc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.bc-left{display:flex;align-items:center;gap:8px}
+.bank-logo{width:34px;height:34px;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;border:0.5px solid var(--border2)}
+.bank-logo img{width:100%;height:100%;object-fit:contain;padding:3px}
+.bank-name{font-size:13px;font-weight:600;color:var(--text)}
+.bank-sub{font-size:10px;color:var(--text3);margin-top:1px}
+.bc-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.bc-stat .lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;font-weight:600}
+.bc-stat .val{font-size:13px;font-weight:600;color:var(--text);margin-top:1px}
+.bc-stat .val.gold{color:var(--gold)}.bc-stat .val.green{color:var(--green)}.bc-stat .val.warn{color:var(--warn)}.bc-stat .val.red{color:var(--red)}
+.score-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.score-fill{height:100%;border-radius:2px;background:var(--gold);transition:width 0.5s}
+.obs-tag{font-size:10px;color:var(--text3);margin-top:6px;padding-top:6px;border-top:0.5px solid var(--border);line-height:1.4}
+.denied-item{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--radius);margin-bottom:5px}
+.denied-name{font-size:12px;font-weight:500;color:var(--text2);flex:1}
+.denied-reason{font-size:10px;color:var(--red)}
+
+/* BADGES */
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.badge.gold{background:var(--gold-bg);color:var(--gold);border:0.5px solid var(--gold-border)}
+.badge.green{background:var(--green-bg);color:var(--green)}
+.badge.red{background:var(--red-bg);color:var(--red)}
+.badge.warn{background:var(--warn-bg);color:var(--warn)}
+.badge.gray{background:var(--surface2);color:var(--text2)}
+
+/* PROFILE */
+.profile-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-xl);padding:1.25rem;margin-bottom:1.5rem}
+.profile-top{display:flex;align-items:center;gap:14px;margin-bottom:1rem;padding-bottom:1rem;border-bottom:0.5px solid var(--border)}
+.profile-avatar{width:48px;height:48px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--gold);font-family:var(--font-display);flex-shrink:0}
+.profile-name{font-size:17px;font-weight:600;color:var(--text);letter-spacing:-0.01em}
+.profile-meta{font-size:12px;color:var(--text2);margin-top:2px}
+.profile-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.pf-item .lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;font-weight:600}
+.pf-item .val{font-size:13px;color:var(--text);margin-top:1px;font-weight:500}
+
+/* BUTTONS */
+.btn{padding:10px 20px;border:none;border-radius:var(--radius);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;letter-spacing:0.01em}
+.btn-primary{background:var(--gold);color:#fff}
+[data-theme="dark"] .btn-primary{color:#0f0f0e}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-ghost{background:var(--surface2);color:var(--text2);border:0.5px solid var(--border2)}
+.btn-ghost:hover{color:var(--text)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:0.5px solid rgba(192,58,58,0.25)}
+.btn-ai{background:var(--purple-bg);color:var(--purple);border:0.5px solid var(--purple-border)}
+.btn-ai:hover{filter:brightness(1.1)}
+.btn-ai:disabled{opacity:0.5;cursor:not-allowed}
+.btn-row{display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap}
+
+/* COMP TABLE */
+.comp-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:1rem}
+.comp-table th{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;padding:6px 10px;text-align:left;border-bottom:0.5px solid var(--border);background:var(--surface2)}
+.comp-table td{padding:8px 10px;border-bottom:0.5px solid var(--border);color:var(--text2)}
+.comp-table tr:last-child td{border-bottom:none}
+.comp-table tr.best td{color:var(--text);background:var(--gold-bg)}
+.comp-table tr.best td:first-child{border-left:2px solid var(--gold)}
+.val-green{color:var(--green)!important;font-weight:600}
+.val-red{color:var(--red)!important;font-weight:600}
+.val-warn{color:var(--warn)!important;font-weight:600}
+.val-gold{color:var(--gold)!important;font-weight:600}
+
+/* AI BLOCK */
+.ai-block{background:var(--surface);border:0.5px solid var(--purple-border);border-radius:var(--radius-xl);padding:1.5rem;margin-top:1.5rem;position:relative;overflow:hidden}
+.ai-block::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),transparent)}
+.ai-block-header{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem}
+.ai-icon{width:32px;height:32px;border-radius:8px;background:var(--purple-bg);border:0.5px solid var(--purple-border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.ai-block-title{font-size:14px;font-weight:600;color:var(--purple)}
+.ai-block-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.ai-tabs{display:flex;gap:4px;margin-bottom:1.25rem;background:var(--surface2);border-radius:var(--radius);padding:3px}
+.ai-tab{padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;color:var(--text3);border:none;background:none;transition:all 0.15s}
+.ai-tab.active{background:var(--purple-bg);color:var(--purple);box-shadow:inset 0 0 0 0.5px var(--purple-border)}
+.ai-panel{display:none}.ai-panel.active{display:block}
+.ai-content{font-size:13px;color:var(--text2);line-height:1.75}
+.ai-content h4{font-size:12px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:0.06em;margin:1rem 0 0.4rem;padding-top:0.75rem;border-top:0.5px solid var(--border)}
+.ai-content h4:first-child{margin-top:0;padding-top:0;border-top:none}
+.ai-content p{margin-bottom:0.6rem}
+.ai-content strong{color:var(--text);font-weight:600}
+.ai-loading{display:flex;align-items:center;gap:10px;color:var(--text3);font-size:13px;padding:0.5rem 0}
+.ai-dots span{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--purple);margin:0 2px;animation:dot-pulse 1.4s ease-in-out infinite}
+.ai-dots span:nth-child(2){animation-delay:0.2s}
+.ai-dots span:nth-child(3){animation-delay:0.4s}
+@keyframes dot-pulse{0%,80%,100%{transform:scale(0.6);opacity:0.4}40%{transform:scale(1);opacity:1}}
+.ai-devolutiva{background:var(--purple-bg);border:0.5px solid var(--purple-border);border-radius:var(--radius-lg);padding:1.25rem;font-size:13px;color:var(--text2);line-height:1.75;white-space:pre-wrap}
+.copy-btn{font-size:11px;padding:4px 10px;background:var(--surface2);border:0.5px solid var(--border2);border-radius:6px;color:var(--text2);cursor:pointer;font-family:var(--font);float:right;margin-top:-2px}
+.copy-btn:hover{color:var(--text)}
+
+/* SETTINGS */
+.settings-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-xl);padding:1.5rem;margin-bottom:1rem}
+.settings-card h3{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.settings-card p{font-size:12px;color:var(--text2);margin-bottom:1rem;line-height:1.6}
+.key-display{display:flex;align-items:center;gap:8px;margin-top:0.75rem}
+.key-val{font-size:12px;font-family:monospace;color:var(--text3);background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--radius);padding:6px 10px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.key-status{display:flex;align-items:center;gap:6px;font-size:12px;margin-top:8px}
+.dot-ok{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.dot-off{width:6px;height:6px;border-radius:50%;background:var(--text3)}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:12px 18px;font-size:13px;color:var(--text);z-index:999;transform:translateY(80px);opacity:0;transition:all 0.3s;pointer-events:none;max-width:320px;box-shadow:0 4px 20px var(--shadow)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:rgba(45,138,90,0.4);color:var(--green)}
+.toast.error{border-color:rgba(192,58,58,0.4);color:var(--red)}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text3)}
+.empty-icon{font-size:28px;margin-bottom:8px}
+.fichas-count{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--gold-bg);color:var(--gold);font-size:9px;font-weight:700;margin-left:4px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-xl);padding:1.75rem;max-width:460px;width:100%;box-shadow:0 8px 40px var(--shadow)}
+.modal h3{font-family:var(--font-display);font-size:20px;margin-bottom:0.5rem;color:var(--text)}
+.modal p{font-size:13px;color:var(--text2);margin-bottom:1.25rem;line-height:1.6}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end}
+
+hr{border:none;border-top:1px solid var(--border);margin:1.5rem 0}
+
+/* ── LOGIN SCREEN ── */
+#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:200}
+.login-box{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-xl);padding:2.5rem 2rem;width:100%;max-width:380px;box-shadow:0 8px 40px var(--shadow)}
+.login-logo{display:flex;justify-content:center;margin-bottom:1.75rem}
+.login-logo img{height:56px;width:auto;object-fit:contain}
+.login-title{font-family:var(--font-display);font-size:20px;color:var(--text);text-align:center;margin-bottom:4px}
+.login-sub{font-size:12px;color:var(--text3);text-align:center;margin-bottom:1.5rem}
+.login-field{margin-bottom:1rem}
+.login-field label{display:block;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
+.login-field input{width:100%;padding:10px 12px;background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:border-color 0.15s}
+.login-field input:focus{border-color:var(--gold)}
+.login-btn{width:100%;padding:12px;background:var(--gold);color:#fff;border:none;border-radius:var(--radius);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;margin-top:0.5rem;transition:filter 0.15s}
+[data-theme="dark"] .login-btn{color:#0f0f0e}
+.login-btn:hover{filter:brightness(1.1)}
+.login-erro{background:var(--red-bg);border:0.5px solid rgba(192,58,58,0.3);border-radius:var(--radius);padding:8px 12px;font-size:12px;color:var(--red);text-align:center;margin-top:0.75rem;display:none}
+.logout-btn{background:none;border:none;cursor:pointer;font-size:11px;color:var(--text3);padding:4px 8px;border-radius:var(--radius);transition:all 0.15s;font-family:var(--font)}
+.logout-btn:hover{background:var(--red-bg);color:var(--red)}
+/* ── BANK CARD 5-STATS ── */
+.bank-card{background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--radius-xl);padding:1.25rem;margin-bottom:12px;transition:border-color 0.2s}
+.bank-card:hover{border-color:var(--border2)}
+.bank-card.top{border-color:var(--gold-border);background:var(--gold-bg)}
+.bc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.bc-left{display:flex;align-items:center;gap:10px}
+.bank-name{font-size:15px;font-weight:600;color:var(--text)}
+.bank-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.bc-stats5{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-bottom:10px;border-top:0.5px solid var(--border);padding-top:10px}
+.bc-stat5{padding:0 8px 0 0}
+.bc-stat5:first-child{padding-left:0}
+.stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;font-weight:600;margin-bottom:3px}
+.stat-val{font-size:14px;font-weight:600;color:var(--text)}
+.stat-val.gold{color:var(--gold)}
+.stat-val.green{color:var(--green)}
+.stat-val.warn{color:var(--warn)}
+.stat-val.red{color:var(--red)}
+
+
+/* ── FICHAS SECTION ── */
+.fichas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin-top:0}
+.ficha-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-xl);padding:1.25rem;transition:border-color 0.2s;position:relative}
+.ficha-card:hover{border-color:var(--border2)}
+.ficha-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:0.75rem}
+.ficha-card-avatar{width:40px;height:40px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--gold);font-family:var(--font-display);flex-shrink:0}
+.ficha-card-info{flex:1;min-width:0;margin-left:10px}
+.ficha-card-nome{font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ficha-card-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.ficha-card-actions{display:flex;gap:5px;flex-shrink:0}
+.ficha-card-btn{width:28px;height:28px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all 0.15s}
+.ficha-card-btn-edit{background:var(--gold-bg);color:var(--gold)}
+.ficha-card-btn-edit:hover{filter:brightness(1.2)}
+.ficha-card-btn-del{background:var(--red-bg);color:var(--red)}
+.ficha-card-btn-del:hover{filter:brightness(1.2)}
+.ficha-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:0.75rem;padding-top:0.75rem;border-top:0.5px solid var(--border)}
+.ficha-card-item .fc-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;font-weight:600}
+.ficha-card-item .fc-val{font-size:12px;color:var(--text);margin-top:1px;font-weight:500}
+.ficha-card-type{display:inline-flex;align-items:center;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;margin-bottom:4px}
+.ficha-card-type.cadastral{background:var(--blue-bg);color:var(--blue)}
+.ficha-card-type.simulacao{background:var(--green-bg);color:var(--green)}
+.fichas-empty{text-align:center;padding:4rem 1rem;color:var(--text3)}
+.fichas-empty-icon{font-size:36px;margin-bottom:12px}
+.fichas-search{display:flex;gap:8px;margin-bottom:1.25rem}
+.fichas-search input{flex:1;padding:8px 12px;background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:13px;outline:none}
+.fichas-search input:focus{border-color:var(--gold)}
+.fichas-search input::placeholder{color:var(--text3)}
+
+/* ── FICHAS LIST VIEW ── */
+.fichas-list-view{display:flex;flex-direction:column;gap:6px}
+.ficha-list-item{display:flex;align-items:center;gap:12px;background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:10px 14px;transition:border-color 0.15s;cursor:pointer}
+.ficha-list-item:hover{border-color:var(--border2)}
+.ficha-list-avatar{width:36px;height:36px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--gold);flex-shrink:0}
+.ficha-list-info{flex:1;min-width:0;display:grid;grid-template-columns:160px 100px 110px 110px 1fr;align-items:center;gap:8px}
+.ficha-list-nome{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ficha-list-cell{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ficha-list-actions{display:flex;gap:5px;flex-shrink:0}
+
+
+.bank-card.made-card{border-color:rgba(224,169,76,0.35);background:rgba(224,169,76,0.04)}
+
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="data:image/png;base64,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" alt="Money Flow">
+    </div>
+    <div class="login-title">Acesso restrito</div>
+    <div class="login-sub">Plataforma interna Money Flow · Home Equity</div>
+    <div class="login-field">
+      <label>Usuário</label>
+      <input type="text" id="login-user" placeholder="seu usuário" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" onclick="tentarLogin()">Entrar</button>
+    <div class="login-erro" id="login-erro">Usuário ou senha incorretos. Tente novamente.</div>
+  </div>
+</div>
+
+<!-- APP (shown after login) -->
+<div id="app-shell">
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo-area">
+    <div>
+      <img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCACnAZADASIAAhEBAxEB/8QAHQABAAICAwEBAAAAAAAAAAAAAAYHBQgBAwQJAv/EAFYQAAEDAwEEBAcKBg0MAwAAAAEAAgMEBREGBxIhMRNBUYEIFCJhcZGhFSMyNkJSdLGy0WJyc8HS8BYYMzQ1N1NWkpOis+EXJENGVFVjgpSjwtODlfH/xAAbAQEAAwEBAQEAAAAAAAAAAAAABAUGAwEHAv/EADYRAAEDAwEFBQYEBwAAAAAAAAABAgMEBRESBhMhMUFRYXGRoUKBscHR4RQiMvAVFjM0UnKS/9oADAMBAAIRAxEAPwDTJERAEREAREQBERAEREARFyAXEAAkngAEBwimmmNnV5uoZPWD3PpjxBkGXuHmb96sexaD07ag13igrJhj3yo8rj2gch6soCkaC1XOvGaK31VQO2OIuHsXbXWC90MRlrLVWQxjm98RDR3rZBjGRsDGMa1o5NaMAI5oc0tcA5p4EHrQGrqKebXNM09nrYblQRiOmqnFr4xwDJBx4DqB48PMoGgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAi5AJOAMkqwdEbOai4COuve/T0pwWwDhJIPP80e1ARXTOnLpqCq6GggJY0++TO4MZ6T+ZXFpDRFpsAbM5oq63AzPIODT+COr0qRUFHS0FKylo4I4IWDDWMGAF3oAuupqIKWB09TNHDG0Zc97sAKJ6y17bbGHU1KW1tcMjcafIYfwj+YcfQqh1DqC632o6W41TntByyIcGM9A/PzQFvSbQbRLeKa121ktbJPK2PfaMMGTzyeeOfJTBUtsZtJrdSOuD2+9UTN4H8N3AfnKulAQLbe5g0vTtd8J1U3d9TlTKsfbhc2zXOktUbsinYZJOPyncvYPaq4QBF+4YpJpWxQsdJI84a1oySVaWidmrGNZXahbvP5tpAeA/HPX6EBXdpsd3uzsW+3z1Azgua3yR3ngs6/ZtrRsBm9xZHNAzhsjCT6BnKvKCKKCJsMMbI42DDWMGAApFayfEIs9h+soDUGohmp53wVET4pWHDmPaQ5p7CCutX7t60vSVmnn6hhjbHW0e70jhw6SMnGD2kZGO8KgkAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBd1HTVFZUx01LC+aaQ4axoySV32S11t4uEdDQQmWV/qaOsk9QV5aJ0lQ6bpQW4nrXjEs5Hsb2BAYnQOgaa0NjuF1ayor8ZazmyE+btPn9SnSLG6jvlvsNvdWV8oaOTGD4Tz2NH64QHsrqumoaWSqq52QwxjLnvOAFUGuNodXczJQ2dz6Wi5Ol5SSj8w9qwGsNU3DUdXvTuMVKw+9QNPkt857T51gEBySSck5K4RZ3QdnN71NS0hbmFrukm/Ebz9fAd6At7ZjZ/cjSkAkYW1FT7/LngePwR6upSSpmjp6aWolcGxxsL3E9QHErsaA1u60YAUG2x3oUGnm26J+J647px1Rj4XozwCAqO/3CS63mruEpO9PKXAdg6h3DC6KCkqa6rjpKSF800jt1jGjiSv1baKquNbFR0cLpZ5ThrR+vJXnoLSNNpuj35Nya4Sj32XHAfgt7AgOjQWi6XT0DampDJ7k4eVJjhH5m/epciimvtZUunacwQbs9xePIjzwYPnO/XigMze73brOyM1s+7JI4NiiaN6SQ54AN6+P+Km1I0tpYmlu7hg4LXvZNRVmq9obLlc5X1DaQeMSudyyPgjzDPHHmWxCAiu1uojptnd4dIW++Q9G3JxxcQB38Vq8rt8I29iOhobBE7ypXdPMAfkjg0Hvye5UkgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCyenLJX365MoqGPeceL3n4Mbe0lcacstbfbnHQULMudxe8/BY3rJV96WsFDp62to6NmXnBllPwpHdp83m6kB+NJacoNOW8U9I3fldjppnDynnz9g8yzKKK681jSacpjDFuz3CQe9xZ4MHzndg8yA9Ws9U0OmqLfmPS1Tx7zA04LvOewDt9So2/3mvvlwdW3CYveeDWjg1g7AOoLz3Ouq7lWyVtbM6aeQ5c531DsC8yAIiIArm2M2PxGyPuszcTVvwM9UYPD18T6MKrtKWiS+X6ltzAd2R2ZHD5LBzK2LpoY6enjghYGRRsDGNHUByQH7JABJOAOtUFrO41GqdYyCjY6YF/QUzG9YHX3nJVq7SrrLb9POpaMPfW17vF4GsBLuPMjz4Xn2daOisFIKura2S4yt8s8xEPmj86A79n+kYNOUXSyhstwlHvsnU38EeZSlFFdoWrodOUPQwlslxmHvUeeDB84js7AgOjaJrOGwU5o6NzZblI3gOYiB+UfP5vzKkquonq6mSpqZXyzSO3nvccklKuonq6mSpqZXSzSO3nvccklerTtsmvN8o7XTgmSplDMjqHWe4ZPcgL32B2P3N0ebjKzE9wf0nEcejHBv5z3qxHOa1pc44aOJK6qGlioqKCjp2hsUMbY2NHUAMBRHbLf/cPRVQInllVW/wCbw4PEA/CPqz3kICiNod7OoNX19xDiYjJ0cPHOI28B6+feo+iIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAL2Wa21d2uMVBRRGSaQ4HYB1k9gC80EUk8zIYWOfI9wa1rRkknqV77O9Kxadtgkma11wnbmZ/Pc7Gj0dfagPfpDTtHpy1tpacB8zgHTzHm933DsWaRRDaJrGHT9KaWkLZLlKPJaeIiHziPq+5AcbQ9Zw6fpzSUhbLcZB5Lc5EQ+cfzfcqRq6merqZKmplfLNId573HJJSqqJqqpkqKiV0s0ji573HJJXUgCIiAIi9doo33C6UtCzO9PK1nDqyeKAtjYxYvE7RJeZ2Ymq/JjyOLYwefefqVgLqpII6WkipoWhscTAxgHUAF2oDxPt0El2ZcpgJJYmFkOeUeeZHnPDivaiwur9R0WnLYamocHzOyIYQcOkP3dpQHRrnU9Npu2GQ4krJRiCLPM9p8w/wVDXKtqbjXS1tZK6WeV2XOP68l23261l6uUtfXSb8rzwHU0dTQOoBeFAFbvg62ETV9XqGdmWwDoKfI+UeLj6sDvVRLazZ3aG2PRttoN3EgiD5eHy3cXe0+oIDPrXrb7ezcdXi2xvzBbo9zA/lHYLvVwHcr7u9bFbrXVV8xAjp4nSO9AGVqNcauWvuFRWzuLpZ5HSPJPWTlAedF3UVJU1tSymo6eWomecNjjaXOPcFamjNjlZU7lVqWc0kXMU0RBkP4zuIb7UBVlFSVVbUNp6OnlqJnfBZGwuJ7grD07se1DXtEtzmhtkZwdx3lyeocB61d1gsFnsNKILVQQ0zcYLmjL3el3M+tZNAVTDsRswjAlvNe5/WWNYAe4gqEbStm9XpWH3Qo53VttLt1zy0B8RPLeA5jzrYx72MbvPe1o7ScKGbW7zaabQ9ypqirgdNUwmOGMODnOceRx6evqQFKbN9n2pdf3KSjsFI1zIQDPUTO3Yos8sntODwAJUm2h7CtbaNs0l4nbSXGhhGZ5KN5cYh85zSAcecZx14V6eBlNb37LKmGmLPG47lIapoPlZLW7hI7N0YB8x7FcN/loYLDXzXN0baFlNI6oMnwej3TvZ82MrBXHaiqprisDGppauMdV7/AKF5BbYpIEeq8VTPgfNhFy7G8d3OM8Mrhb0owiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiLO6GsbtQahgoiD0DffJ3DqYOr0ngO9ATjY9pYNYNQ10flOyKRpHIdb/zBWcvxBFHBCyGJgZGxoaxo5ABY3VN8pdP2iSvqTvEeTHH1vd1D8/mQGP19qqDTdu8jdkr5gegjPV+EfMFQ9bVVFbVyVVVK6WaVxc97jxJXfe7nV3i5S19bJvyyHuaOoDsAXiQBERAEREAUh2cvYzW9rdIQG9NjJ7S049qjy7KeaSnnjnhcWyRuD2uHUQchAbPooFYdp1nno2C6iSlqQPLwwuY49ox29hXj1FtSpI4XRWSmfLKcgTTDDW+gcygJZrDU9v05RGWocJKl495gBw5x7fMO0+pUTf7vW3u5SV1dKXyO+C0fBYOoAdQXnuNdV3Gskq62d888hy57j+uF50AREQHtsMTJ75QQSfAkqY2O9BcAtvgMAAclpzSTPpqqGojOHxPa9vpByFtvp66U95stJc6V4fFURhwxzB6x3HIKAj+1yK7VmkZLXZqSWpqa2RsTgzhuszlxJ6s4xxPWoBpbYvVylk+oa5tOzmaenIc/vceA7sq7kQGJ03puy6epuhtNBFBkeU/GXu/GceJWWXRcK2jt9K6qrqmKnhZxc+RwaB61VestsdLT79LpqDxmTl41M3DB6G8z34QFl3692uxUZrLrWR00Q5bx4uPYBzPoCp/V22Wtne+n05StpouQqJmhzz5w3kO/KrO93e5XqtdWXSslqpjwBeeDR2AcgPMF4EBkbtfbzdZXSXG51VSXcw+Q49XJY8knmSfSuEQGe0TrDUWjLobjpy5SUUzm7sgADmSDsc08D+ZZ7XW13Xes7b7mXm7NFC4gvgp4mxNkxy3scSPNyUDRR3UkD5ElcxFcnXCZ8zokr0boRVx2BERSDmEREAREQBERAEREAREQBERAEREAREQBERAFdWxqzih04bi9vv1a7eBxyYDgDv4lUs0Fzg0cycLZiz0zKO00lIwYEULGDuCA9Mj2sY573BrWjLiepUFtD1G/UN8e+Nx8SgJZTt6iOt3f9WFZm127PtulXQQu3Zax/RZHU3iXfd3qjkARFLLLoa5XfTZvNHPC7g/dgIO87dJGAeWeCAiaLlzXNcWuBa4HBB5grhAERSvSuhrpf7c+vZLFTQA+QZAffMc8ICKIv1I3ckcwnO6SFzBFLPMyGGN0kjzhrWjJJ8wQH4RTqz7Mb7WRCWrlgoQeO687z+8Dl617p9k9eGEw3ame4cg6Mtz9aArdFl9Racu9hkDbjSljHHDZWneY70FYhAEUn0ho2s1LQVNVS1UMRgduBjwfKOMjj1KPVlNPR1UlLUxOimicWva4cQUB0qWaD13eNJSGOn3amhecvppDw85afklRNTDT+z+63q0w3KmqaVkUucB5dkYJHZ5kBY0e22yGMGS0XBr8eUGlhAPrGfUsJfNtdwma5lntUNNnlJO7pHDuGB9fFQvVmi7jpygjrKuop5GPk6MCMnOcE9Y8y8Ok9PVeo66Sko5YY3xx9ITISBjIHV6UB03+/wB4v1R092r5qlw+C1xw1voaOAWMVgDZVe/9uoB3u+5cnZTe/wDb6A97vuQFfIpRqvRNy05b2VtXU00sbpBGBGSTnB7R5lkaLZnd6ykiqoK+gdFK0PYd53EHuQEGRSTVujrnpulhqauSGWKV+4DGScHGeOQo7Gx0kjY2NLnOIDQOslAflFYDNlV7dG1xraFpIyWkuyPYsBq/StVpkQCsq6eV82d1sec4HM8QgI8iv2PwXNXPja/9kNjG8Mge+/or9ftWdXfzhsf/AHf0FTrtBbU5zJ6ktKGoX2SgEV//ALVrV384rH/3f0FVVg0TcLztK/YLBV00db45NSdO/e6Pei38ngM4O4epSILrR1DXOikRUamV7kOb6aWNURzcZIqiv79q1q7+cVj/AO7+gqa1tp+p0rqq4aerJop6ihl6OSSLO644B4ZAPWvaS50lY5WwPRyoJaaWJMvTBhkRFPOARWrs82Ea41dSxV74YbPb5AHMmrchz29rWAbxHnOAVYX7VObxf46R9N9AO79vKqJ79bqd+h8qZ96/DJKZRTvTU1vA1oRWvtC2C630nSyV8MUN6oIwXPlosl7GjrdGRnHnGQqoU6mq4KpmuFyOTuOMkT41w9MKEVy6K8HzUOq9K2/UNuv9mbTV0XSNZJ0m8w5ILT5OMggjgvJtJ2Eal0PpSfUVbc7bWU0D2NkZT7+80OOAeLQMZI9ajJeKJZtwkias4x38sHRaSZGa1bwKlRFammdguv8AUGn6G90MVtbS1sImhEtVuvLTyJGOGRxUqpq4KVqOmejUXtOccT5FwxMlVosnqmx3DTWoa2xXSNrKyilMcoacjPPIPWCCCpLsk2a3naRX11LaqqlpG0UTZJZaje3fKOAPJBOeBPcvZaqGKLfPdhvPPQ8bG5ztCJxIOiv4+C1q4f6w2P1y/oqiblTCiuNTRiaOcQTPi6WP4L90kbw8xxlcaS401ZncPR2OZ+5aeSHGtMZOhpLXBw5g5WytirY7hZqStiILZomu4ejiFrSp7sw1pHZj7lXRx8Re7McnPoXHt/BPsU04k42p6fnvtha6j8qppXGRrP5RuOI9PWFRZBBIIII5grZV93tbKM1jrhTCnDd7pBI3GFrzqOppqy/V1VSM3IJZ3vjGMcCUBj1e2yH4i0f5SX7ZVEq9tkXxEo/x5f7woCLbXNJGN79QW6L3t3GqjaPgn5+PrVZLaGWNksb4pGB7HghzSMgjsVLar0HXUup4aO2ROkpK1+YX9UXaHHqwgMVoHTM2o7uI3BzaOEh1RIOz5o85/wAVfUUEVNRNp4IxHFGzcYwDgAF4tM2WksNoit9K3Ibxkf1vd1k/rwWSk/cnfilAaw1P75l/HP1q6NlulIbTbI7nVxB1fUt3gXD9yYeQHnPX6VVenKIXHVtJROGWyVWHDzA5PsC2LAAGByQHD3MYwve8NaOJc44AXRSV1DVuLaWsp5y3mI5A7HqVR7YdQ1FVen2WCVzKSmwJGtP7o/GePmHBQi3VtVbqyOso5nwzRnLXNP68EBsncqKluFHLR1kLZoZRhzXBa/60sUmnr9LQkl8J8uF5HwmHl9yvfTFzF4sNJcWtAM0YLmjqcOBHrUK250LZLTRXADy4pTET+C4feEB+thWPcO4dvjI+yF7tpmjm3ulNwoIw24wt5Dh0zfm+kdS8Gwr+BLh9IH2QrFQGrz2uY9zHtLXNOCCMEFX1ss+I1v8AQ4/2io5tW0b4wyS/WuH35vlVMTB8MfPA7R1qSbLviNbvxX/bKAw+3H4sUv0ofZKjWw34yVf0U/aapLtw+LFN9KH2XKN7DPjHWfRT9pqAuInAJPILFHUdgHO80H9e371lJRvRuaPlNVJP2aanLyRFS4J/lv8ABASTbDd7XX6bhhorhS1EgqWuLY5A4gYdx4L1bF7345Z5LRM/MtIcx5POM/cfrCrXU2m7np58Lbk2JpmBLNx+9yxn61zoq8Oseo6WuyeiDtyYdrDz+/uQF56xtLb3pyrt5A33M3oj2PHEH18PQql2T2R1w1X01RH71Qe+PBHy84aPXx7ld7HskY17CHMcMgjrCxGnbJDaKm5yx7v+e1Jm4fJGBw9Zd60Bl3ODWlxOAOta+a+vRvmpqmqa4mBh6OEfgjr7zk96tfare/cjTEkUT8VNZ71HjgQPlH1cO8KiU6g+mFJ+9ofxGrw3nUNhsj4mXm9263OlBMbaqpZEXgcyN4jPNe6j/ekP4jfqWrvhyfw5pj6NUfaYvi1qoG3CtSBy4Rc8fBDXVE6wQ60TJsJ+zzQ/88tPf/ZQ/pLVDZNNDU+FdHUQSxzQy3iveyRjg5r2lsxBB6we1U4rI8GX+PLTf5Sb+4kW9hsMdrpahzHq7UxefgpSPrXVMsaKmMKb2rQbwhP46NUfTP8Axat+VoN4Qf8AHPqj6Z/4tVDsT/dSf6/NCdeP6TfH5EDWwXgm7MKW/wBTJrO/UzZ6Gkl6OhgkGWSyjGXntDcjA6z6Fr6voZslssentmtgtUbN0xUUbpOGMyPAc84/GcVotq7g+ko0ZGuHPXHu6lfbIGyy5dyQlK8fupbfHfEvdGj8Z5dD07d/+jnKqrwqNfVujdGU9BaJ3QXO7vdEyZp8qKJoBe4Hqd5TQD5yeYWl5nmNR4wZpOm3t7pN472e3PPKylm2XdcYN+9+lF5cM59Szq7kkD9CJnB9MVqf4WmzGksc8etrDTNgo6ubo6+CNuGxynJEgHIB3EHz47VaHgra8rtY6InorvO6ouNokbC+Z5y6WJwJY5x6zwc0nrxnmSpxtYssWoNm1/tMrWnpqGR0eRnEjW77D/SAUWhlmstz3bl4IuHd6L1+aHWZrKyn1J2ZTuKs8C3UArtDXHT0smZLZVdJE3PHo5Rnh/zNd61bu0Kxs1Loe82NzQTWUb42ZGcP3csP9LC1I8EjUHuNtZhoJH7sF2p30rh1b4G+z2tx3rdVddpYVo7osreuHJ8/VD8296TU2lenA+bFptdTcb9SWaJuKmpqmUzQRye5waPaV9HrVRQ2210lupm7sFLCyCMdjWgAewLV7R+iej8L24UpixS0FRLdAMcN1zQ5nqfI31LapS9rrg2odCxnLTq/6+xytUCsRyr248jTXwxrJ7nbU47oxmI7pRslJ7ZGZY72BnrVueBxYPczZnNeJY92a7VbntJHHo4/Ib7d/wBax3hr2TxvRNovzGAvoK0wuPWI5W/pMaO9XBs6tDbBoOx2cN3TSUMLHjh8PdG8eH4RK9r7ir7DDFniq4Xwb+0PIafTWvd2cfP9qePa9fxpjZpfryH7ssNI5kJ/4j/IZ7XAr57EkkknJPMra/w2NQeK6Ws+m4pMPrql1TMB8yMYGfS539lanq/2OpN1QrKvN6+icPjkhXaXVNpTogREWtKsIiIAr22Q/EWj/KS/bKolXrsh+ItJ+Ul+2UBKamqgp3RCeVsfSyCNm91uPIexdqhO2dzmaTjlY5zXNq2FpHDBweIPaunSu0Cgl0w+ou07WVtIzD2E+VMccC0dZPJATZ1XTtrW0Rlb4w9hkDOvdBAJ9oXbJ+5O9BVU7M7vVXvaFW3Crd5clK8Nbngxu83DQrWk+A70FAUPs6LRtCot7+WeB6d1yvla32itNt1LT13IQ1IefRvcfYtjopGSxNlYQWPbvNI6wgNeNdNe3WN1D858ZeePZnh7FhVaO1rSNZUV5vlsgfOJGgVEbBlwI4bwHMjGFB7Hpm83euZS09DOwE+XJIwtawdZJP1IC3dkbXt0NSb/AMp8hb6N48l59s5aNGOB5moj3fapVZbfDa7VTW6D4EEYaD2nrP1nvVe7dLg0U9Ba2uG8XGZ4B5ADAz7fUgPRsK/gS4fSR9kKdXq4RWq1z3CdrnxwN3nhvPHAKC7Cf4FuH0lv2VJ9ofxJuv5A/WgMxQ1VPXUcVXSytlglaHNcORCUdLT0cAgpomxRBxcGtGAMnJ9pVL7M9YOsVWKCueXW6Z3X/oXH5Q83aFdsb2SRtexwcxwy1w5EICBbcfixTfSx9lyjewz4x1n0Q/aapJtx+LFL9KH2So1sO+MlX9FP2ggLjXV4zTYz4xFj8cL9VH7hJj5pWuD7TeS92LZX8z/oH/cgJztzmilqbZ0UrJAGSfBdnraq1XrqbfcaeLpamhqoox8uSJzR6yF5EBd2yK9+6enPEpn5qKIiM5PEs+Se7GO5TVU5sOcRqSrGeBpT9oK4JziCQ/glAUVtRvfuxqiVsb801JmGPjkEg+Ue8/Uoov1LxlcT2lflAfS+h/eUP5Nv1LH33TOnL/JFJfLDa7o+EEROq6RkxYDzA3gcZwFkKH95Qfk2/Uqm8ILa3c9mtwtNNb7VR1wropJHmdzhulhaBjHpXw+ipp6mpSOn/UucccepsZZGRx6pORmNo2gNC0ugNQVVLo7T9PPDbZ5I5Y7dE1zHCMkEEN4FaseDN/Hjpv8AKTf3Eil+ovCU1BerBcLRNpy1xRVtNJTve2R+Wh7S0kcefFRHwZf48tN/lJv7iRb63UFZR26pbVc1Rccc+ypSTzxS1EaxdqfE3tWg3hB/xz6o+mf+LVvytHtu2ldUVu17UlVR6bvFTTy1e9HLFQyPY8breIIbg9ypNjJGMqpFcuPy9fFCZd2qsbcJ1KrX0ttrmPt1M+MgsdCwtx2YC+dVdpXU9BSSVddpy8UtNEMyTTUMjGMHLi4twOa3o2G3+LUmyqw3CN7TJHStp5wOqSMbjh34yPSrLbVqSQRSsXKIqpw70T6Ea0Lpkc1SjPDjjmF90zKd7oTSztbx4bwc0n2Fq1yW9fhDbPJdoOim09v3BdqCQz0e+cB+Rh0ZPVvDHPrA6srTk6A1uLr7lnSd68b3t3o/E3+vOMY8+cKy2XuED6BsauRHMyi8e/OfA4XKB6Tq7HBS7vAaZJ7o6qkwej6GmBPVnMi2ZurmMtlW9/wGwvLvRg5VfeDxs9m2f6INPcQw3auk6es3TkR8MNjBHPdHMjhklZfbfqCLTWyu/XJ0gZI6kdTwdpllG43HbjOe4rFXaVtwuy7niiqiJ38kLilasFKmvoiqpodYrpNZtR0V4pTiWjqmVEfpa4OH1L6N2qthudrpLjTO3oKqBk8ZB5tcAR7Cvmmt4fBY1B7u7H7dHI8OqLZI+hl48cNw5n9hzR3LUba0muCOdE/SuPP7p6lbaJMPcxevHyJnb9MU9LtAumrGlvS11DBSloGCOjc8uPnyCz+iFm5aqmhqYKaSZjJqjeETCeL90ZOO3A4ruWte3vaK6ybfNLRQzHxaxFr6sNP8vgSA/wDx7veVi6Ckmuk+7TmjfgnD1whbzSspmauir8S99eacp9WaWqrFUkCOd0b94jOCyRrx7WrOgADA5LhjmvY17HBzXDIIPAheS+XGC0WWuutUd2Cjp3zyH8FrS4/UoCOe9Eh7+Cd64T5Id8NTLzS3wrNQe7m1+up43l0FqiZRR8eG8BvP/tucO5VQvVeK6e6XasudSd6ernfPIe1znFx9pXlX2+ipkpadkKeyiIY2aRZJFevUIiKUcwiIgCvXZD8RaT8pJn+mVRSzVp1VqC1UbaO33J8EDCS1gY0gZOTzCAtLbT8Th9KZ9TlSazF41PfbvSeK3G4PqId4P3Sxo4jr4ALDoCd7EfjbL9Fd9pqueT9zf6CtarNdbhZ6o1VtqTTzOaWFwaDwPVxB7FlzrrVhBBvEuD/w2fooCP1P74l/HP1q09lWsoDSxWK6TCOSPyaaV54OHUwnqI6vUqpcS5xcTkk5K4QG0fMItfLPrLUdrjbFTXKR0TeTJQHgejPEL3z7R9UyxljauGLPymQtyPXlAXFqK92+xW91XXzNbgeRGPhSHsA/XC1/1Hdqm93ie41R8qQ+S3qY0cmj0Lz3CurLhUGorqmWolPypHZ//F5kBb2wn+Bbj9Ib9lSfaH8Sbr+QP1qj7LqK82WKSK2Vz6dkjt5wDGnJxjPEFemv1hqSvo5aSruj5YJW7r2GNgyO4IDAqydlOsvFnx2K6S+8OOKaVx+Afmk9nZ2KtkQFy7cPizTfSh9lyjWw74y1X0U/aCi101JeLna4LbXVXTU8BBZvNG9wGBk8zw7V5bPdbhaKh1Rbal1PK5u6XNAOR2cQgNlkVAfs61Z/vmX+rZ9yfs61Z/vmX+rZ+igLN2yfEmXP8vH9ao5Zm7aov11pDSXC4vngJDixzGgZHI8AsMgJ9sQONT1Hnpj9oK4ak4ppfxCtbbPdbhaKk1FtqXU8rm7pc0A8OziFln641U9pa68SkEYI6Nn3ICPSfujvSV+VyTk5K4QH0voeNDAe2Jv1LV3w4/4d0x9Gn+21V5Ht22rRxtYzVZDWjAHiFNwH9WovrfW+qNaz00+p7obhJStcyEmGOPcDiCR5DRnkOaxFm2ZqqGtbUSOaqJnlnqip2FxV3COaHdtRckdVjeDQcbcdNH/iy/3EirlZHTd7umnL3TXqzVXitfSkmGXca/dJaWng4EHgTzC11ZCs9PJE3m5FTzTBVxPRj2uXop9JEWio28bWB/rY7/oab/1rn/LztY/nY7/oab/1r51/JVd/m3zX6F//ABeDsX0+ptP4R/8AElqb6Oz+9YtbfBq2qR6EvMtovUj/AHCuDwXvHHxaXl0mOzHA+gKM6j2v7RdRWWps151Gaqgqmhs0XicDN4Agji1gI4gcioItPa9n9zQPpKrC6lzw8E7UTjwK2prtczZY+GEPpfRVVNW0kVXRzx1FPK0PjljcHNeDyII5hdy+emidoestGnd09famlg3t407sSQk9fkOBAz2jBU7HhJ7SRB0e9aC7+U8T4+n4WPYszUbF1bX4iejm9/BfeWMd3iVPzJhTcurqaejpZKqqnjggiaXySSODWtA5kk8gtM/CY2pxa6vENmskhNitzyWycR4zLjG/x+SASG+knrUH1vtG1nrPyNQX2oqKcHLaZmI4R/yNABPnOT51E1oLHsw2gk387tT05Y5J9yDWXFZ26GJhPiFsR4EuoPF9SXrTUsmGVlO2qhafnxnddjzlr8/8q13WZ0XqW66R1HTX+yysjrafeDC9u80hzS0gjrGCr26Uf42kfAnNU4ePNPUhU025la/sPozUTRU9PJUTPbHFG0ve5xwGgDJJXzo15fZdTayu9/lJzXVT5Wg/JYT5Le5uB3KdX7b7tEvNmrbTV1dA2nrIHQSmKlDX7jhg4OeHAlVUqXZuxS21XvnxqXCJjs+5MuFY2o0ozkhvn4O+pf2UbJrPVySb9TSR+JVHHPlx+SM+ct3T3rDeFjqD3F2RVdIx+7PdZmUjOPHdJ3n/ANlpHetXNnO1LVugaGqodP1FM2nqpBK9k8Ikw4DGR2cMeoLq2kbStU6/ZRM1DUU72UZcYWQQiMZdjJIHoCgR7Lytun4jhu0dq7+3GPE7OuTFptHtYx+/cQ1ERbkpgiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgP//Z" alt="Money Flow">
+      <span class="logo-sub">Plataforma de Crédito</span>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Alternar tema">🌙</button>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Operações</div>
+    <button class="nav-item active" id="nav-simulador" onclick="switchMain('simulador')"><span class="nav-dot"></span>Simulador</button>
+    <button class="nav-item" id="nav-fichas" onclick="switchMain('fichas')"><span class="nav-dot"></span>Fichas Cadastrais <span id="fichas-count-badge" class="fichas-count" style="margin-left:auto">0</span></button>
+    <button class="nav-item" id="nav-ficha" onclick="switchMain('ficha')"><span class="nav-dot"></span>Nova Ficha Cadastral</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="consultant-tag">
+      <div class="avatar">MF</div>
+      <div class="consultant-info">
+        <div class="name">Consultor Money Flow</div>
+        <div class="role">Acesso interno</div>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Sair">Sair</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main" id="main-area">
+
+<!-- ══ VIEW: SIMULADOR ══ -->
+<div id="view-simulador">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Simulador de Crédito</div>
+      <div class="page-subtitle">Home equity — análise de elegibilidade, condições e parceiros</div>
+    </div>
+    <div id="header-pill" class="status-pill"><div class="status-dot"></div><span id="header-pill-text">Sistema operacional</span></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="t-dados" onclick="switchTab('dados')">Dados do Crédito</button>
+    <button class="tab" id="t-resultado" onclick="switchTab('resultado')">Resultado</button>
+  </div>
+
+  <!-- TAB DADOS -->
+  <div id="tab-dados" class="tab-panel active">
+    <div class="section">
+      <div class="section-title">Identificação</div>
+      <div class="form-grid cols-3">
+        <div class="field"><label>Nome do Cliente</label><input type="text" id="nomeCliente" placeholder="Nome completo"></div>
+        <div class="field"><label>Data de Nascimento</label><input type="date" id="dataNasc"></div>
+        <div class="field"><label>Telefone</label><input type="text" id="telefoneCliente" placeholder="(00) 00000-0000"></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Imóvel em Garantia</div>
+      <div class="form-grid cols-3">
+        <div class="field"><label>Tipo do Imóvel</label>
+          <select id="tipoImovel" onchange="atualizarTaxa()">
+            <option value="apt_cond">Apartamento / Casa em Condomínio</option>
+            <option value="casa_fora">Casa fora de Condomínio</option>
+            <option value="sala_loja">Sala Comercial / Loja</option>
+            <option value="outros">Outros (galpão, misto etc.)</option>
+            <option value="terreno">Terreno</option>
+          </select>
+        </div>
+        <div class="field"><label>Valor do Imóvel (R$)</label><div class="prefix-wrap"><span class="pfx">R$</span><input type="text" id="valorImovel" oninput="fmt(this);atualizarTaxa()" placeholder="0,00"></div></div>
+        <div class="field"><label>Imóvel Regularizado?</label>
+          <select id="regularizado">
+            <option value="sim">Sim — matrícula atualizada</option>
+            <option value="parcial">Parcialmente</option>
+            <option value="nao">Não</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Crédito Solicitado</div>
+      <div class="form-grid cols-3">
+        <div class="field"><label>Valor Solicitado (R$)</label><div class="prefix-wrap"><span class="pfx">R$</span><input type="text" id="valorCredito" oninput="fmt(this);atualizarTaxa()" placeholder="0,00"></div></div>
+        <div class="field"><label>Prazo (meses)</label>
+          <select id="prazo">
+            <option value="60">60 meses (5 anos)</option>
+            <option value="120">120 meses (10 anos)</option>
+            <option value="180">180 meses (15 anos)</option>
+            <option value="240" selected>240 meses (20 anos)</option>
+          </select>
+        </div>
+        <div class="field"><label>Finalidade</label>
+          <select id="finalidade">
+            <option value="dividas">Pagamento de dívidas</option>
+            <option value="capital">Capital de giro</option>
+            <option value="reforma">Reforma / Obra</option>
+            <option value="investimento">Investimento</option>
+            <option value="outros">Outros</option>
+          </select>
+        </div>
+        <div class="field"><label>Taxa Juros a.m. (auto-calculada)</label><div class="prefix-wrap"><span class="pfx">%</span><input type="text" id="taxaJuros" placeholder="0,00" style="padding-left:26px"></div></div>
+        <div class="field"><label>Negativado?</label>
+          <select id="negativado"><option value="false">Não</option><option value="true">Sim</option></select>
+        </div>
+        <div class="field"><label>Com Despachante?</label>
+          <select id="despachante"><option value="nao">Não</option><option value="sim">Sim</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Renda e Proponentes</div>
+      <div class="form-grid cols-3">
+        <div class="field"><label>Renda Mensal Bruta (R$)</label><div class="prefix-wrap"><span class="pfx">R$</span><input type="text" id="rendaTotal" oninput="fmt(this)" placeholder="0,00"></div></div>
+        <div class="field"><label>Ocupação</label>
+          <select id="ocupacao">
+            <option value="autonomo">Autônomo / Prof. Liberal</option>
+            <option value="clt">Assalariado (CLT)</option>
+            <option value="empresario">Empresário</option>
+            <option value="servidor">Servidor Público</option>
+            <option value="aposentado">Aposentado / Pensionista</option>
+          </select>
+        </div>
+        <div class="field"><label>Estado Civil</label>
+          <select id="estadoCivil">
+            <option value="casado">Casado(a)</option>
+            <option value="solteiro">Solteiro(a)</option>
+            <option value="divorciado">Divorciado(a)</option>
+            <option value="uniaoEstavel">União Estável</option>
+          </select>
+        </div>
+        <div class="field"><label>Emite Nota Fiscal / PJ?</label>
+          <select id="emiteNF"><option value="sim">Sim</option><option value="nao">Não</option></select>
+        </div>
+        <div class="field"><label>Possui Contrato de Serviços?</label>
+          <select id="contrato"><option value="nao">Não</option><option value="sim">Sim</option></select>
+        </div>
+        <div class="field"><label>Possui IQ (Interveniente Quitante)?</label>
+          <select id="possuiIQ" onchange="toggleIQ()"><option value="nao">Não</option><option value="sim">Sim</option></select>
+        </div>
+        <div class="field" id="field-vlDebitoIQ" style="display:none"><label>Saldo devedor / dívida a quitar (R$)</label><div class="prefix-wrap"><span class="pfx">R$</span><input type="text" id="vlDebitoIQ" oninput="fmt(this)" placeholder="0,00"></div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Tabela de taxas — referência Banco Bari</div>
+      <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
+        <table class="comp-table" style="margin:0">
+          <thead><tr><th>Tipo de Imóvel</th><th>LTV &lt;30%</th><th>LTV 30–40%</th><th>LTV 40–50%</th></tr></thead>
+          <tbody>
+            <tr><td>Apt. / Casa em Condomínio</td><td class="val-gold">1,09%</td><td>1,14%</td><td>1,19%</td></tr>
+            <tr><td>Casa fora de Condomínio</td><td>1,19%</td><td>1,24%</td><td>1,29%</td></tr>
+            <tr><td>Sala Comercial / Loja</td><td>1,24%</td><td>1,29%</td><td>1,34%</td></tr>
+            <tr><td>Outros (galpão, misto)</td><td>1,34%</td><td>1,39%</td><td>1,44%</td></tr>
+            <tr><td>Terreno</td><td>1,39%</td><td>1,44%</td><td>1,49%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">LTV máximo 50% · Prazo máximo 240 meses</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="simular()">Calcular simulação</button>
+      <button class="btn btn-ghost" onclick="preencherExemplo()">Carregar exemplo</button>
+      <button class="btn btn-ghost" onclick="limpar()">Limpar tudo</button>
+    </div>
+  </div>
+
+  <!-- TAB RESULTADO -->
+  <div id="tab-resultado" class="tab-panel">
+    <div id="resultado-vazio" class="empty-state">
+      <div class="empty-icon">◎</div>
+      <div style="font-size:14px;color:var(--text2)">Preencha os dados e clique em <strong>Calcular simulação</strong></div>
+    </div>
+    <div id="resultado-conteudo" style="display:none"></div>
+  </div>
+</div><!-- /view-simulador -->
+
+
+<!-- ══ VIEW: FICHA CADASTRAL ══ -->
+<div id="view-ficha" style="display:none">
+  <div class="page-header">
+    <div><div class="page-title">Ficha Cadastral</div><div class="page-subtitle">Dados completos do cliente</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="abrirInserir()" title="Cole dados de texto para preencher a ficha automaticamente">📥 Inserir dados</button>
+      <div class="status-pill"><div class="status-dot"></div>Novo cadastro</div>
+    </div>
+  </div>
+
+  <!-- MODAL INSERIR -->
+  <div id="modal-inserir" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-xl);padding:1.75rem;max-width:580px;width:100%;box-shadow:0 8px 40px var(--shadow)">
+      <div style="font-family:var(--font-display);font-size:20px;margin-bottom:4px;color:var(--text)">📥 Inserir ficha do cliente</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:1rem;line-height:1.6">Cole abaixo o texto da ficha recebida (e-mail, WhatsApp ou sistema). O preenchimento é automático e não precisa de IA.</div>
+      <textarea id="inserir-texto" style="width:100%;height:200px;background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:12px;padding:10px;outline:none;resize:vertical;line-height:1.6" placeholder="Cole aqui o texto completo da ficha...&#10;&#10;Exemplo:&#10;Nome do Solicitante: João da Silva&#10;CPF: 123.456.789-00&#10;Telefone: (11) 99999-0000&#10;..."></textarea>
+      <div style="display:flex;gap:8px;margin-top:1rem;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="fecharInserir()">Cancelar</button>
+        <button class="btn btn-primary" onclick="processarInserir()">⚡ Preencher automaticamente</button>
+      </div>
+      <div id="inserir-status" style="margin-top:8px;font-size:12px;color:var(--text3)"></div>
+    </div>
+  </div>
+  <div class="section"><div class="section-title">Dados Pessoais</div>
+    <div class="form-grid cols-3">
+      <div class="field"><label>Nome Completo</label><input type="text" id="fc-nome" placeholder="Nome completo"></div>
+      <div class="field"><label>CPF</label><input type="text" id="fc-cpf" placeholder="000.000.000-00"></div>
+      <div class="field"><label>Data de Nascimento</label><input type="date" id="fc-nasc"></div>
+      <div class="field"><label>Telefone</label><input type="text" id="fc-tel" placeholder="(00) 00000-0000"></div>
+      <div class="field"><label>E-mail</label><input type="text" id="fc-email" placeholder="email@exemplo.com"></div>
+      <div class="field"><label>Profissão</label><input type="text" id="fc-prof" placeholder="Ex: Dentista"></div>
+      <div class="field"><label>Nacionalidade</label><input type="text" id="fc-nac" value="Brasileiro(a)"></div>
+      <div class="field"><label>Naturalidade (Cidade/UF)</label><input type="text" id="fc-nat" placeholder="Ex: São Paulo / SP"></div>
+      <div class="field"><label>Estado Civil</label><select id="fc-ec"><option>Casado(a)</option><option>Solteiro(a)</option><option>Divorciado(a)</option><option>Viúvo(a)</option><option>União Estável</option></select></div>
+    </div>
+  </div>
+  <div class="section"><div class="section-title">Dados do Cônjuge</div>
+    <div class="form-grid cols-3">
+      <div class="field"><label>Nome do Cônjuge</label><input type="text" id="fc-cnjNome" placeholder="Se houver"></div>
+      <div class="field"><label>CPF do Cônjuge</label><input type="text" id="fc-cnjCpf" placeholder="000.000.000-00"></div>
+      <div class="field"><label>Data de Nascimento</label><input type="date" id="fc-cnjNasc"></div>
+      <div class="field"><label>Naturalidade</label><input type="text" id="fc-cnjNat" placeholder="Cidade / UF"></div>
+      <div class="field"><label>E-mail</label><input type="text" id="fc-cnjEmail" placeholder="email@exemplo.com"></div>
+    </div>
+  </div>
+  <div class="section"><div class="section-title">Imóvel em Garantia</div>
+    <div class="form-grid cols-3">
+      <div class="field"><label>CEP</label><input type="text" id="fc-cepIm" placeholder="00000-000"></div>
+      <div class="field"><label>Cidade</label><input type="text" id="fc-cidadeIm" placeholder="Cidade"></div>
+      <div class="field"><label>UF</label><input type="text" id="fc-ufIm" placeholder="UF" maxlength="2"></div>
+      <div class="field"><label>Logradouro</label><input type="text" id="fc-logradouro" placeholder="Rua, Av..."></div>
+      <div class="field"><label>Número / Compl.</label><input type="text" id="fc-num" placeholder="123 / Ap. 01"></div>
+      <div class="field"><label>Bairro</label><input type="text" id="fc-bairro" placeholder="Bairro"></div>
+      <div class="field"><label>Classificação</label><select id="fc-classIm"><option>Residencial</option><option>Comercial</option></select></div>
+      <div class="field"><label>Tipo</label><select id="fc-tipoIm"><option>Apartamento</option><option>Casa em Condomínio</option><option>Casa fora de Condomínio</option><option>Sala Comercial</option><option>Loja</option><option>Galpão</option><option>Terreno</option></select></div>
+      <div class="field"><label>Regularização</label><select id="fc-reg"><option>Totalmente regularizado com matrícula em cartório</option><option>Parcialmente regularizado</option><option>Não regularizado</option></select></div>
+      <div class="field"><label>Valor do Imóvel (R$)</label><div class="prefix-wrap"><span class="pfx">R$</span><input type="text" id="fc-vlIm" oninput="fmt(this)" placeholder="0,00"></div></div>
+      <div class="field"><label>Valor do Crédito (R$)</label><div class="prefix-wrap"><span class="pfx">R$</span><input type="text" id="fc-vlCred" oninput="fmt(this);calcularLiquidoFicha()" placeholder="0,00"></div></div>
+      <div class="field"><label>Número de Parcelas</label><select id="fc-parcelas"><option value="60">60 meses</option><option value="120">120 meses</option><option value="180">180 meses</option><option value="240" selected>240 meses</option></select></div>
+      <div class="field span-2"><label>Motivo do Crédito</label><input type="text" id="fc-motivo" placeholder="Ex: Pagamento de dívidas, reforma..."></div>
+    </div>
+  </div>
+  <div class="section"><div class="section-title">Interveniente Quitante (IQ)</div>
+    <div class="form-grid cols-3">
+      <div class="field"><label>Possui financiamento / dívida em aberto?</label>
+        <select id="fc-iq" onchange="toggleFcIQ()"><option value="nao">Não</option><option value="sim">Sim</option></select>
+      </div>
+      <div class="field" id="fc-field-iqValor" style="display:none"><label>Saldo devedor / dívida a quitar (R$)</label>
+        <div class="prefix-wrap"><span class="pfx">R$</span><input type="text" id="fc-iqValor" oninput="fmt(this);calcularLiquidoFicha()" placeholder="0,00"></div>
+      </div>
+    </div>
+    <div id="fc-iq-info" style="display:none;margin-top:8px">
+      <div class="alert info"><span class="alert-icon">ℹ</span><span style="font-size:12px">O saldo devedor será abatido do crédito liberado. O crédito líquido disponível ao cliente será: <strong id="fc-iq-liquido">—</strong></span></div>
+    </div>
+  </div>
+  <div class="section"><div class="section-title">Atividade Profissional</div>
+    <div class="form-grid cols-3">
+      <div class="field"><label>Tipo de Ocupação</label><select id="fc-ocup"><option>Autônomo / Profissional Liberal</option><option>Assalariado (CLT)</option><option>Empresário</option><option>Servidor Público</option><option>Aposentado / Pensionista</option></select></div>
+      <div class="field"><label>Profissão / Serviços</label><input type="text" id="fc-serv" placeholder="Ex: Odontologia"></div>
+      <div class="field"><label>Qtd. Funcionários</label><input type="text" id="fc-func" placeholder="0"></div>
+      <div class="field"><label>Condição da Sede</label><select id="fc-sede"><option>Própria</option><option>Alugada</option></select></div>
+      <div class="field"><label>Site / Redes Sociais</label><input type="text" id="fc-site" placeholder="www..."></div>
+      <div class="field"><label>Principais Clientes / Atuação</label><input type="text" id="fc-clientes" placeholder=""></div>
+      <div class="field"><label>Faturamento / Renda (R$)</label><div class="prefix-wrap"><span class="pfx">R$</span><input type="text" id="fc-fat" oninput="fmt(this)" placeholder="0,00"></div></div>
+      <div class="field"><label>Custo Fixo Mensal (R$)</label><div class="prefix-wrap"><span class="pfx">R$</span><input type="text" id="fc-custo" oninput="fmt(this)" placeholder="0,00"></div></div>
+      <div class="field"><label>Emite NF / Tem CNPJ?</label><select id="fc-nf"><option>Sim</option><option>Não</option></select></div>
+      <div class="field"><label>Possui Contrato de Serviços?</label><select id="fc-contrato"><option>Não</option><option>Sim</option></select></div>
+      <div class="field"><label>Movimenta conta e emite NF PJ?</label><select id="fc-pj"><option>Sim</option><option>Não</option></select></div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="salvarFichaCadastral()">Salvar ficha cadastral</button>
+    <button class="btn btn-ghost" onclick="preencherExemploFicha()">Carregar exemplo</button>
+    <button class="btn btn-ghost" onclick="limparFicha()">Limpar</button>
+  </div>
+</div><!-- /view-ficha -->
+
+
+<!-- ══ VIEW: FICHA SALVA ══ -->
+<div id="view-ficha-salva" style="display:none">
+  <div class="page-header">
+    <div><div class="page-title" id="fs-title">Ficha do Cliente</div><div class="page-subtitle" id="fs-subtitle">Visualização de ficha salva</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="editarFicha()">Editar / Simular</button>
+      <button class="btn btn-danger" onclick="confirmarExclusao()">Excluir ficha</button>
+    </div>
+  </div>
+  <div id="fs-perfil"></div>
+  <div id="fs-resultado"></div>
+</div>
+
+
+<!-- ══ VIEW: FICHAS CADASTRAIS ══ -->
+<div id="view-fichas" style="display:none">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Fichas Cadastrais Salvas</div>
+      <div class="page-subtitle">Todas as fichas cadastrais salvas — clique para abrir ou use os botões de ação</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span id="fichas-total-badge" class="status-pill" style="background:var(--gold-bg);border-color:var(--gold-border);color:var(--gold)"><div class="status-dot" style="background:var(--gold);animation:none"></div><span id="fichas-total-txt">0 fichas</span></span>
+      <div style="display:flex;gap:4px;background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--radius);padding:3px">
+        <button id="btn-view-grid" onclick="setFichasView('grid')" title="Visualização em ícones" style="width:30px;height:28px;border:none;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;background:var(--gold-bg);color:var(--gold);transition:all 0.15s">⊞</button>
+        <button id="btn-view-list" onclick="setFichasView('list')" title="Visualização em lista" style="width:30px;height:28px;border:none;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;background:none;color:var(--text3);transition:all 0.15s">☰</button>
+      </div>
+      <button class="btn btn-primary" onclick="switchMain('ficha')" style="font-size:12px;padding:7px 14px">+ Nova ficha</button>
+    </div>
+  </div>
+  <div class="fichas-search">
+    <input type="text" id="fichas-search-input" placeholder="Buscar por nome, CPF, cidade..." oninput="renderFichasSection()">
+  </div>
+  <div id="fichas-section-grid" class="fichas-grid"></div>
+</div>
+
+</main>
+</div><!-- /app-shell -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODAL EXCLUIR -->
+<div class="modal-overlay" id="modal-excluir" style="display:none">
+  <div class="modal">
+    <h3>Excluir ficha?</h3>
+    <p>Esta ação não pode ser desfeita. A ficha será removida permanentemente.</p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-danger" onclick="excluirFichaConfirmado()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+// ═══════════════════════════════════════════════════════════════════════
+// API INTEGRATION LAYER
+// Quando API_URL estiver configurada, usa o backend.
+// Caso contrário, processa localmente (modo offline).
+// ═══════════════════════════════════════════════════════════════════════
+
+// ⬇️ CONFIGURE AQUI quando o backend estiver no ar:
+var API_URL = 'https://web-production-609e8.up.railway.app';
+var _apiToken = localStorage.getItem('mf_api_token') || '';
+
+function apiHeaders(){
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + _apiToken
+  };
+}
+
+function modoAPI(){
+  return API_URL && API_URL.length > 0;
+}
+
+// ── LOGIN via API ──────────────────────────────────────────────────────
+async function tentarLoginAPI(email, senha){
+  try {
+    var resp = await fetch(API_URL + '/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email: email, senha: senha})
+    });
+    if(!resp.ok) return false;
+    var data = await resp.json();
+    _apiToken = data.access_token;
+    localStorage.setItem('mf_api_token', _apiToken);
+    localStorage.setItem('mf_user', JSON.stringify(data.user));
+    return true;
+  } catch(e) {
+    console.error('API login error:', e);
+    return false;
+  }
+}
+
+// ── SIMULAR via API ────────────────────────────────────────────────────
+async function simularAPI(d){
+  try {
+    var payload = {
+      tipo_imovel:   d.tipoIm,
+      valor_imovel:  d.valorImovel,
+      valor_credito: d.valorCredito,
+      prazo:         d.prazo,
+      finalidade:    d.finalidade,
+      taxa_input:    d.taxaInput || 0,
+      renda:         d.renda || 0,
+      negativado:    d.negativado,
+      ocupacao:      d.ocupacao,
+      estado_civil:  d.estadoCivil,
+      emite_nf:      d.emiteNF,
+      contrato:      d.contrato,
+      regularizado:  d.regularizado,
+      cidade_imovel: d.cidadeImovel || '',
+      uf_imovel:     d.ufImovel || '',
+    };
+    var resp = await fetch(API_URL + '/simulacao?salvar=true', {
+      method: 'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify(payload)
+    });
+    if(resp.status === 401){ logout(); return null; }
+    if(!resp.ok){ var err = await resp.json(); throw new Error(err.detail || 'Erro na API'); }
+    return await resp.json();
+  } catch(e) {
+    console.error('API simular error:', e);
+    showToast('Erro ao conectar com a API: ' + e.message, 'error');
+    return null;
+  }
+}
+
+// ── SALVAR CLIENTE via API ─────────────────────────────────────────────
+async function salvarClienteAPI(dados){
+  try {
+    var resp = await fetch(API_URL + '/clientes', {
+      method: 'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify(dados)
+    });
+    if(resp.status === 401){ logout(); return null; }
+    if(!resp.ok) return null;
+    return await resp.json();
+  } catch(e) {
+    console.error('API cliente error:', e);
+    return null;
+  }
+}
+
+// ── CONVERTER resultado da API para formato local ──────────────────────
+function converterResultadoAPI(apiRes, d){
+  // A API retorna no mesmo formato que o motor local — perfeito!
+  return {
+    taxa:            apiRes.taxa,
+    ltv:             apiRes.ltv,
+    ltvOk:           apiRes.ltv_ok,
+    isComercial:     d.tipoIm === 'sala_loja' || d.tipoIm === 'outros' || d.tipoIm === 'terreno',
+    regulOk:         d.regularizado === 'sim',
+    iof:             apiRes.iof,
+    moneyPlus:       apiRes.money_plus,
+    totalFin:        apiRes.total_financiado,
+    custas:          apiRes.custas,
+    avalBens:        apiRes.aval_bens,
+    parcelaPrice:    apiRes.parcela_price,
+    sac1Val:         apiRes.parcela_sac_1,
+    rendaMinPrice:   apiRes.renda_min_price,
+    rendaMinSAC:     apiRes.renda_min_sac,
+    compPrice:       apiRes.comp_price || 0,
+    compSAC:         apiRes.comp_sac || 0,
+    rendaOkPrice:    apiRes.renda_ok_price,
+    rendaOkSAC:      apiRes.renda_ok_sac,
+    ltvColor:        apiRes.ltv <= 0.40 ? 'green' : apiRes.ltv <= 0.50 ? 'warn' : 'red',
+    aprovados:       (apiRes.bancos_aprovados || []).map(function(b){
+      return {
+        b:          {nome:b.nome, sigla:b.sigla, cor:b.cor, logo:b.logo_url, taxa:b.taxa*100, obs:b.obs, madeCapital:b.is_bridge},
+        ltvMax:     b.ltv_max,
+        prazoBco:   b.prazo_banco,
+        parcelaB:   b.parcela,
+        totalPagoB: b.total_pago,
+        compBruto:  b.comp_bruto || 0,
+        compLiq:    b.comp_bruto || 0,
+      };
+    }),
+    reprovados: (apiRes.bancos_reprovados || []).map(function(b){
+      return {b:{nome:b.nome, sigla:b.sigla, cor:'#555', logo:'', madeCapital:false}, motivos:b.motivos};
+    }),
+  };
+}
+
+
+// ── THEME ─────────────────────────────────────────────────────────────────────
+function toggleTheme(){
+  var html=document.documentElement;
+  var next=html.getAttribute('data-theme')==='dark'?'light':'dark';
+  html.setAttribute('data-theme',next);
+  localStorage.setItem('mf_theme',next);
+  document.getElementById('theme-btn').textContent=next==='dark'?'🌙':'☀️';
+}
+(function(){
+  var saved=localStorage.getItem('mf_theme')||'dark';
+  document.documentElement.setAttribute('data-theme',saved);
+  window.addEventListener('DOMContentLoaded',function(){
+    var b=document.getElementById('theme-btn');
+    if(b)b.textContent=saved==='dark'?'🌙':'☀️';
+  });
+})();
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
+function tentarLogin(){
+  var u=document.getElementById('login-user').value.trim();
+  var s=document.getElementById('login-pass').value;
+  if(u==='moneyflow'&&s==='mf2026'){
+    localStorage.setItem('mf_logado','1');
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app-shell').style.display='grid';
+    renderSidebar();renderFichasSection();atualizarPillIA();
+  } else {
+    document.getElementById('login-erro').style.display='block';
+    document.getElementById('login-pass').value='';
+  }
+}
+function logout(){
+  localStorage.removeItem('mf_logado');
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app-shell').style.display='none';
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-erro').style.display='none';
+}
+(function(){
+  if(localStorage.getItem('mf_logado')==='1'){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app-shell').style.display='grid';
+  } else {
+    document.getElementById('app-shell').style.display='none';
+    document.getElementById('login-screen').style.display='flex';
+  }
+  window.addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&document.getElementById('login-screen').style.display!=='none'){
+      tentarLogin();
+    }
+  });
+})();
+
+// ── BANCOS (todos da planilha) ─────────────────────────────────────────────────
+// Ordenados por taxa (menor primeiro); bancos sem taxa fixa indicados com taxa estimada
+var bancos=[
+  // Dados extraídos da planilha CRÉDITO COM GARANTIA DE IMÓVEL
+  {nome:"Creditas",sigla:"CR",cor:"#b8962e",logo:"https://logo.clearbit.com/creditas.com",
+   taxa:1.09,ltvResid:0.60,ltvComerc:0.00,prazoMax:240,prazoMin:60,rendaMin:4000,negativado:false,
+   vlImovelMin:150000,vlCreditoMin:50000,vlCreditoMax:3000000,
+   aceitaNaoAverbado:false,fazIQ:true,condicionaDividas:true,fazPJ:false,
+   regioes:'todo brasil',minHab:20000,idadeMax:80,
+   amortizacao:'PRICE E SAC',indexador:'PRÉ-FIXADO E PÓS FIXADO IPCA',
+   obs:"Referência em home equity. Opera apenas residencial. Aceita terreno de rua LTV 30% cidades +200k hab."},
+  {nome:"Pontte",sigla:"PT",cor:"#2d5a8c",logo:"https://logo.clearbit.com/pontte.com.br",
+   taxa:1.09,ltvResid:0.50,ltvComerc:0.40,prazoMax:240,prazoMin:60,rendaMin:6000,negativado:false,
+   vlImovelMin:250000,vlCreditoMin:100000,vlCreditoMax:5000000,
+   aceitaNaoAverbado:false,fazIQ:true,condicionaDividas:true,fazPJ:true,
+   regioes:'todo brasil',minHab:50000,idadeMax:80,
+   amortizacao:'PRICE E SAC',indexador:'PÓS-FIXADO IPCA',
+   obs:"100% digital. Aceita terreno LTV 30% cidades +500k hab. Faz PJ e PF. Averba habite-se."},
+  {nome:"Banco Inter",sigla:"BI",cor:"#ff7a00",logo:"https://logo.clearbit.com/inter.co",
+   taxa:1.09,ltvResid:0.60,ltvComerc:0.60,prazoMax:240,prazoMin:60,rendaMin:4000,negativado:false,
+   vlImovelMin:200000,vlCreditoMin:70000,vlCreditoMax:999999999,
+   aceitaNaoAverbado:true,fazIQ:true,condicionaDividas:false,fazPJ:true,
+   regioes:'todo brasil',minHab:50000,idadeMax:80,
+   amortizacao:'PRICE E SAC',indexador:'PRÉ FIXADO E PÓS-FIXADO IPCA',
+   obs:"Aceita residencial e comercial até 60% LTV. Aceita imóvel não averbado. SAC até 240m, PRICE até 180m."},
+  {nome:"Banco Bari",sigla:"BA",cor:"#3d5a7c",logo:"https://logo.clearbit.com/bancobari.com.br",
+   taxa:1.15,ltvResid:0.60,ltvComerc:0.40,prazoMax:240,prazoMin:36,rendaMin:0,negativado:false,
+   vlImovelMin:150000,vlCreditoMin:30000,vlCreditoMax:10000000,
+   aceitaNaoAverbado:true,fazIQ:true,condicionaDividas:true,fazPJ:true,
+   regioes:'df,go,mg,pr,sp,sc,rs,rj,es,mt,ms',minHab:50000,idadeMax:80,
+   amortizacao:'PRICE E SAC',indexador:'PRÉ-FIXADO E PÓS FIXADO IPCA',
+   obs:"Linha reutilizável. Aceita comercial até 40% LTV. Cidades +50k hab. Carência até 6 meses."},
+  {nome:"Daycoval",sigla:"DC",cor:"#5a3d7c",logo:"https://logo.clearbit.com/daycoval.com.br",
+   taxa:1.15,ltvResid:0.60,ltvComerc:0.50,prazoMax:240,prazoMin:36,rendaMin:4000,negativado:false,
+   vlImovelMin:200000,vlCreditoMin:30000,vlCreditoMax:5000000,
+   aceitaNaoAverbado:true,fazIQ:true,condicionaDividas:false,fazPJ:false,
+   regioes:'todo brasil',minHab:50000,idadeMax:80,
+   amortizacao:'PRICE E SAC',indexador:'PRÉ-FIXADO E PÓS FIXADO IPCA',
+   obs:"Aceita comercial até 50% LTV. Imóvel comercial exige averbação. Apenas PF. Carência até 3 meses."},
+  {nome:"Banco Paulista",sigla:"BP",cor:"#2d6e8c",logo:"https://logo.clearbit.com/bancopaulista.com.br",
+   taxa:1.39,ltvResid:0.50,ltvComerc:0.35,prazoMax:240,prazoMin:60,rendaMin:5000,negativado:false,
+   vlImovelMin:300000,vlCreditoMin:80000,vlCreditoMax:5000000,
+   aceitaNaoAverbado:true,fazIQ:true,condicionaDividas:false,fazPJ:true,
+   regioes:'região central',minHab:100000,idadeMax:80,
+   amortizacao:'PRICE E SAC',indexador:'PRÉ-FIXADO E PÓS FIXADO IPCA',
+   obs:"Região central. Cidades +100k hab. Aprovação válida 30 dias. Carência 30 dias."},
+  {nome:"Galleria Bank",sigla:"GB",cor:"#3d7c5a",logo:"https://logo.clearbit.com/galleriabank.com.br",
+   taxa:1.19,ltvResid:0.50,ltvComerc:0.35,prazoMax:240,prazoMin:60,rendaMin:0,negativado:true,
+   vlImovelMin:250000,vlCreditoMin:50000,vlCreditoMax:10000000,
+   aceitaNaoAverbado:true,fazIQ:true,condicionaDividas:false,fazPJ:true,
+   regioes:'todo brasil',minHab:50000,idadeMax:80,
+   amortizacao:'PRICE E SAC',indexador:'PÓS-FIXADO IPCA',
+   obs:"Aceita negativado. Norte/NE somente em condomínio. Não aceita garantidor. Carência até 3 meses."},
+  {nome:"Libra",sigla:"LB",cor:"#6a3d7c",logo:"https://logo.clearbit.com/libra.com.br",
+   taxa:1.19,ltvResid:0.50,ltvComerc:0.50,prazoMax:240,prazoMin:36,rendaMin:5000,negativado:false,
+   vlImovelMin:250000,vlCreditoMin:75000,vlCreditoMax:5000000,
+   aceitaNaoAverbado:true,fazIQ:true,condicionaDividas:false,fazPJ:true,
+   regioes:'sul,sudeste,centro oeste,norte nordeste capitais',minHab:10000,idadeMax:80,
+   amortizacao:'PRICE E SAC',indexador:'PÓS-FIXADO IPCA',
+   obs:"Sul/SE/CO + capitais N/NE. Renda informal R$7k mín. LTV 30% cidades +10k hab, LTV 50% cidades +80k."},
+  {nome:"CashMe",sigla:"CM",cor:"#2d8c5a",logo:"https://logo.clearbit.com/cashme.com.br",
+   taxa:1.25,ltvResid:0.60,ltvComerc:0.30,prazoMax:240,prazoMin:60,rendaMin:4000,negativado:false,
+   vlImovelMin:250000,vlCreditoMin:50000,vlCreditoMax:15000000,
+   aceitaNaoAverbado:true,fazIQ:true,condicionaDividas:false,fazPJ:true,
+   regioes:'todo brasil menos maranhão',minHab:0,idadeMax:80,
+   amortizacao:'PRICE E SAC',indexador:'PRÉ-FIXADO E PÓS FIXADO IPCA',
+   obs:"Aceita barracão e imóvel operacional. Terreno rua LTV 30% em cidades metropolitanas/capitais. Carência até 3 meses."},
+  {nome:"C6 Bank",sigla:"C6",cor:"#1a1a2e",logo:"https://logo.clearbit.com/c6bank.com.br",
+   taxa:1.00,ltvResid:0.60,ltvComerc:0.50,prazoMax:240,prazoMin:60,rendaMin:4000,negativado:false,
+   vlImovelMin:300000,vlCreditoMin:80000,vlCreditoMax:999999999,
+   aceitaNaoAverbado:false,fazIQ:true,condicionaDividas:true,fazPJ:false,
+   regioes:'todo brasil',minHab:0,idadeMax:80,
+   amortizacao:'PRICE E SAC',indexador:'PRÉ-FIXADO E PÓS FIXADO IPCA',
+   obs:"Imóvel deve ser averbado. Aceita residencial, comercial e terreno em condomínio. Apenas PF. Carência 30 dias."},
+  {nome:"Trinus",sigla:"TR",cor:"#4a7c8c",logo:"https://logo.clearbit.com/trinus.com.br",
+   taxa:1.19,ltvResid:0.60,ltvComerc:0.40,prazoMax:240,prazoMin:36,rendaMin:0,negativado:false,
+   vlImovelMin:190000,vlCreditoMin:50000,vlCreditoMax:20000000,
+   aceitaNaoAverbado:true,fazIQ:false,condicionaDividas:false,fazPJ:true,
+   regioes:'todo brasil',minHab:50000,idadeMax:80,
+   amortizacao:'PRICE E SAC',indexador:'PRÉ-FIXADO E PÓS FIXADO IPCA',
+   obs:"Maior limite de crédito (até R$ 20M). Aceita garantidor terceiro. Pré-análise antes de cartório. Carência até 3 meses."},
+  {nome:"Made Capital",sigla:"MC",cor:"#8c3a5a",logo:"https://logo.clearbit.com/madecapital.com.br",
+   taxa:2.99,ltvResid:0.50,ltvComerc:0.30,prazoMax:24,prazoMin:1,rendaMin:0,negativado:true,
+   vlImovelMin:300000,vlCreditoMin:100000,vlCreditoMax:5000000,
+   aceitaNaoAverbado:false,fazIQ:true,condicionaDividas:false,fazPJ:false,
+   regioes:'sul,sudeste,centro-oeste',minHab:100000,idadeMax:70,
+   amortizacao:'PRICE TABELA AMERICANA',indexador:'PRÉ FIXADO',
+   madeCapital:true,
+   obs:"Bridge/curto prazo (máx 24m). Aceita negativado e trabalhistas. Taxa elevada. Sul/SE/CO cidades +100k. Idade máx 70 anos."},
+];
+
+var TAXA_TABLE={
+  apt_cond:[0.0109,0.0114,0.0119],
+  casa_fora:[0.0119,0.0124,0.0129],
+  sala_loja:[0.0124,0.0129,0.0134],
+  outros:[0.0134,0.0139,0.0144],
+  terreno:[0.0139,0.0144,0.0149]
+};
+var LTV_MAX=0.50,IOF=0.0338,TAC_BPO=4500,ALIQ_TAC=0.004,TX_ADM=25,COMP_MAX=0.33;
+
+// ── STORAGE ───────────────────────────────────────────────────────────────────
+function getFichas(){try{return JSON.parse(localStorage.getItem('mf_fichas')||'[]');}catch(e){return[];}}
+function saveFichas(f){localStorage.setItem('mf_fichas',JSON.stringify(f));}
+function gerarId(){return 'fc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);}
+function getApiKey(){return 'claude-integrated';}
+function renderKeyStatus(){}
+function atualizarPillIA(){
+  var pill=document.getElementById('header-pill');
+  var txt=document.getElementById('header-pill-text');
+  if(pill){pill.className='status-pill ai-pill';txt.textContent='Claude IA ativo';}
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function fmt(el){
+  var v=el.value.replace(/[^0-9]/g,'');
+  if(!v){el.value='';return;}
+  v=(parseInt(v,10)/100).toFixed(2);
+  el.value=Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function unFmt(s){
+  if(!s)return 0;
+  return parseFloat(s.toString().replace(/\./g,'').replace(',','.'))||0;
+}
+function pmt(r,n,pv){
+  r=r/100;
+  if(r===0)return pv/n;
+  return pv*(r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+}
+function brl(v){return 'R$ '+Math.round(v).toLocaleString('pt-BR');}
+function pct(v,dec){dec=dec===undefined?1:dec;return (v*100).toFixed(dec)+'%';}
+function setVal(id,v){var e=document.getElementById(id);if(e)e.value=v;}
+function getVal(id){var e=document.getElementById(id);return e?e.value:'';}
+function showToast(msg,type){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show '+(type||'');
+  setTimeout(function(){t.className='toast';},2800);
+}
+
+// ── TAXA AUTO ─────────────────────────────────────────────────────────────────
+function getTaxaAuto(){
+  var tipo=getVal('tipoImovel');
+  var vlIm=unFmt(getVal('valorImovel'));
+  var vlCred=unFmt(getVal('valorCredito'));
+  if(!vlIm||!vlCred)return 0;
+  var ltv=vlCred/vlIm;
+  var tabela=TAXA_TABLE[tipo]||TAXA_TABLE['outros'];
+  if(ltv<0.30)return tabela[0];
+  if(ltv<=0.40)return tabela[1];
+  return tabela[2];
+}
+function atualizarTaxa(){
+  var t=getTaxaAuto();
+  if(t>0)document.getElementById('taxaJuros').value=(t*100).toFixed(2).replace('.',',');
+}
+
+// ── NAVEGAÇÃO ─────────────────────────────────────────────────────────────────
+function switchMain(v){
+  var views=['simulador','ficha','ficha-salva','fichas'];
+  for(var i=0;i<views.length;i++){
+    var el=document.getElementById('view-'+views[i]);
+    if(el)el.style.display='none';
+  }
+  var show=document.getElementById('view-'+v);
+  if(show)show.style.display='block';
+  var items=document.querySelectorAll('.nav-item');
+  for(var j=0;j<items.length;j++)items[j].classList.remove('active');
+  var fichaItems=document.querySelectorAll('.ficha-item');
+  for(var k=0;k<fichaItems.length;k++)fichaItems[k].classList.remove('active-ficha');
+  var navMap={simulador:'nav-simulador',ficha:'nav-ficha',fichas:'nav-fichas'};
+  if(navMap[v]){var nb=document.getElementById(navMap[v]);if(nb)nb.classList.add('active');}
+  if(v==='fichas')renderFichasSection();
+}
+function switchTab(id){
+  var tabs=['dados','resultado'];
+  for(var i=0;i<tabs.length;i++){
+    var panel=document.getElementById('tab-'+tabs[i]);
+    var btn=document.getElementById('t-'+tabs[i]);
+    if(panel)panel.classList.toggle('active',tabs[i]===id);
+    if(btn)btn.classList.toggle('active',tabs[i]===id);
+  }
+}
+
+// ── LIMPAR / EXEMPLO ──────────────────────────────────────────────────────────
+function limpar(){
+  var allInputs=document.querySelectorAll('#tab-dados input, #tab-dados select');
+  for(var i=0;i<allInputs.length;i++){
+    if(allInputs[i].tagName==='SELECT') allInputs[i].selectedIndex=0;
+    else allInputs[i].value='';
+  }
+  document.getElementById('field-vlDebitoIQ').style.display='none';
+  document.getElementById('resultado-vazio').style.display='block';
+  document.getElementById('resultado-conteudo').style.display='none';
+  switchTab('dados');
+}
+function toggleIQ(){
+  var v=getVal('possuiIQ');
+  var f=document.getElementById('field-vlDebitoIQ');
+  if(f) f.style.display=(v==='sim')?'block':'none';
+  if(v==='nao'){setVal('vlDebitoIQ','');}
+}
+function toggleFcIQ(){
+  var v=getVal('fc-iq');
+  var show=v==='sim';
+  var fv=document.getElementById('fc-field-iqValor');
+  var fi=document.getElementById('fc-iq-info');
+  if(fv)fv.style.display=show?'block':'none';
+  if(fi)fi.style.display=show?'block':'none';
+  if(!show){setVal('fc-iqValor','');}
+  calcularLiquidoFicha();
+}
+function calcularLiquidoFicha(){
+  var vlCred=unFmt(getVal('fc-vlCred'));
+  var iqVal=unFmt(getVal('fc-iqValor'));
+  var liqEl=document.getElementById('fc-iq-liquido');
+  if(liqEl&&vlCred>0&&iqVal>0){
+    var liq=vlCred-iqVal;
+    liqEl.textContent=brl(liq>0?liq:0)+(liq<0?' ⚠ saldo IQ superior ao crédito':'');
+    liqEl.style.color=liq<=0?'var(--red)':'var(--green)';
+  } else if(liqEl){
+    liqEl.textContent='—';liqEl.style.color='';
+  }
+}
+function abrirInserir(){
+  document.getElementById('modal-inserir').style.display='flex';
+  document.getElementById('inserir-texto').value='';
+  document.getElementById('inserir-status').textContent='';
+}
+function fecharInserir(){document.getElementById('modal-inserir').style.display='none';document.getElementById('inserir-status').textContent='';}
+
+function processarInserir(){
+  var texto=document.getElementById('inserir-texto').value.trim();
+  if(!texto){showToast('Cole o texto da ficha primeiro.','');return;}
+  var st=document.getElementById('inserir-status');
+  var filled=0;
+
+  // ── extrai valor de um campo pelo rótulo ──────────────────────────────────
+  function get(labels){
+    var arr=Array.isArray(labels)?labels:[labels];
+    for(var li=0;li<arr.length;li++){
+      var rx=new RegExp(arr[li]+'\\s*[:\\-]\\s*(.+)','i');
+      var m=texto.match(rx);
+      if(m){var v=m[1].trim().replace(/\r/g,'');if(v&&v!=='-'&&v.toLowerCase()!=='não informado')return v;}
+    }
+    return null;
+  }
+
+  // ── converte data DD/MM/AAAA → YYYY-MM-DD ─────────────────────────────────
+  function toISO(s){
+    if(!s)return null;
+    var m=s.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    return m?m[3]+'-'+m[2]+'-'+m[1]:null;
+  }
+
+  // ── extrai número de string R$ ─────────────────────────────────────────────
+  function toNum(s){
+    if(!s)return null;
+    var n=parseFloat(s.replace(/[R$\s.]/g,'').replace(',','.'));
+    return isNaN(n)?null:n;
+  }
+
+  // ── seta campo texto ───────────────────────────────────────────────────────
+  function fill(id,val){
+    if(val==null||val==='')return;
+    var el=document.getElementById(id);
+    if(el){el.value=val;filled++;}
+  }
+
+  // ── seta select pelo texto da opção ───────────────────────────────────────
+  function fillSel(id,val,map){
+    if(val==null)return;
+    var el=document.getElementById(id);
+    if(!el)return;
+    var v=val.trim().toLowerCase();
+    // tenta mapa de conversão primeiro
+    if(map){
+      for(var mk in map){
+        if(v.indexOf(mk.toLowerCase())>=0){
+          for(var oi=0;oi<el.options.length;oi++){
+            if(el.options[oi].text===map[mk]||el.options[oi].value===map[mk]){el.selectedIndex=oi;filled++;return;}
+          }
+        }
+      }
+    }
+    // tenta match direto
+    for(var i=0;i<el.options.length;i++){
+      if(el.options[i].text.toLowerCase()===v||el.options[i].value.toLowerCase()===v){el.selectedIndex=i;filled++;return;}
+    }
+    // tenta match parcial
+    for(var j=0;j<el.options.length;j++){
+      if(el.options[j].text.toLowerCase().indexOf(v)>=0||v.indexOf(el.options[j].text.toLowerCase())>=0){el.selectedIndex=j;filled++;return;}
+    }
+  }
+
+  // ── seta campo monetário ───────────────────────────────────────────────────
+  function fillMoney(id,val){
+    var n=toNum(val);
+    if(n==null||n<=0)return;
+    var el=document.getElementById(id);
+    if(el){el.value=n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});filled++;}
+  }
+
+  // ══ DADOS PESSOAIS ═════════════════════════════════════════════════════════
+  fill('fc-nome',   get('Nome do Solicitante'));
+  fill('fc-cpf',    get('CPF'));
+  fill('fc-tel',    get('Telefone'));
+  fill('fc-email',  get(['E-mail','Email']));
+  fill('fc-prof',   get('Profissão'));
+  fill('fc-nac',    get('Nacionalidade'));
+
+  var nat=get('Naturalidade');
+  if(nat){
+    // normaliza "Alto Garças mt" → "Alto Garças / MT"
+    var natParts=nat.split(/\s+/);
+    var ufCand=natParts[natParts.length-1];
+    if(ufCand.length===2&&/^[a-zA-Z]+$/.test(ufCand)){
+      fill('fc-nat',natParts.slice(0,-1).join(' ')+' / '+ufCand.toUpperCase());
+    } else {
+      fill('fc-nat',nat);
+    }
+  }
+
+  var dob=toISO(get('Data de Nascimento'));
+  if(dob){var el=document.getElementById('fc-nasc');if(el){el.value=dob;filled++;}}
+
+  fillSel('fc-ec', get('Estado Civil'),{
+    'solteiro':'Solteiro(a)','casado':'Casado(a)','divorciado':'Divorciado(a)',
+    'viuvo':'Viúvo(a)','viúvo':'Viúvo(a)','uniao':'União Estável','união':'União Estável'
+  });
+
+  // ══ IMÓVEL EM GARANTIA (unificado com endereço) ═══════════════════════════
+  fill('fc-cepIm',     get(['CEP do Imóvel em Garantia','CEP do Imovel em Garantia','CEP do imóvel','CEP do imovel','CEP']));
+  fill('fc-cidadeIm',  get(['Cidade do Imóvel em Garantia','Cidade do Imovel em Garantia','Cidade do imóvel','Cidade do imovel','Cidade']));
+  fill('fc-logradouro',get(['Rua do Imóvel em Garantia','Rua do Imovel em Garantia','Logradouro','Rua','Avenida']));
+  fill('fc-bairro',    get(['Bairro do Imóvel em Garantia','Bairro do Imovel em Garantia','Bairro']));
+  fill('fc-num',       get(['Número do Imóvel em Garantia','Numero do Imovel em Garantia','Número','Numero','Nº']));
+
+  // UF: aceita sigla ou nome por extenso
+  var ufIm=get(['Estado do Imóvel em Garantia','Estado do Imovel em Garantia','UF do Imóvel em Garantia','Estado do imóvel','UF','Estado']);
+  if(ufIm){
+    var ufMap={'acre':'AC','alagoas':'AL','amapá':'AP','amapa':'AP','amazonas':'AM','bahia':'BA',
+      'ceará':'CE','ceara':'CE','distrito federal':'DF','espírito santo':'ES','espirito santo':'ES',
+      'goiás':'GO','goias':'GO','maranhão':'MA','maranhao':'MA','mato grosso do sul':'MS',
+      'mato grosso':'MT','minas gerais':'MG','pará':'PA','para':'PA','paraíba':'PB','paraiba':'PB',
+      'paraná':'PR','parana':'PR','pernambuco':'PE','piauí':'PI','piaui':'PI',
+      'rio de janeiro':'RJ','rio grande do norte':'RN','rio grande do sul':'RS',
+      'rondônia':'RO','rondonia':'RO','roraima':'RR','santa catarina':'SC',
+      'são paulo':'SP','sao paulo':'SP','sergipe':'SE','tocantins':'TO'};
+    var ufNorm=ufIm.trim();
+    if(ufNorm.length===2){fill('fc-ufIm',ufNorm.toUpperCase());}
+    else{var sig=ufMap[ufNorm.toLowerCase()];if(sig)fill('fc-ufIm',sig);else fill('fc-ufIm',ufNorm);}
+  }
+
+  // Classificação do Imóvel
+  var classIm=get('Classificação do Imóvel');
+  fillSel('fc-classIm', classIm, {
+    'residencial':'Residencial','comercial':'Comercial'
+  });
+
+  // Tipo do Imóvel
+  var tipoIm=get('Tipo do Imóvel');
+  fillSel('fc-tipoIm', tipoIm, {
+    'apartamento':'Apartamento',
+    'casa rua':'Casa fora de Condomínio',
+    'casa fora':'Casa fora de Condomínio',
+    'casa condominio':'Casa em Condomínio','casa condomínio':'Casa em Condomínio',
+    'sala comercial':'Sala Comercial','sala':'Sala Comercial',
+    'loja':'Loja','galpão':'Galpão','galp':'Galpão','terreno':'Terreno'
+  });
+
+  // Regularização
+  var reg=get('Imóvel Regularizado');
+  if(reg){
+    var regSit=get('Situação da Regularização');
+    var regSel=document.getElementById('fc-reg');
+    if(regSel){
+      if(/não|nao/i.test(reg)){regSel.selectedIndex=2;filled++;}
+      else if(regSit&&/atualizar|parcial/i.test(regSit)){regSel.selectedIndex=1;filled++;}
+      else{regSel.selectedIndex=0;filled++;}
+    }
+  }
+
+  // ══ CRÉDITO ═══════════════════════════════════════════════════════════════
+  fillMoney('fc-vlIm',  get(['Valor do Imóvel em Garantia','Valor do Imóvel']));
+  fillMoney('fc-vlCred',get(['Valor do Crédito Solicitado','Valor do Crédito']));
+  fill('fc-motivo',     get('Motivo do Crédito'));
+
+  var parcStr=get('Número de Parcelas');
+  if(parcStr){
+    var parcNum=parseInt(parcStr);
+    var parcSel=document.getElementById('fc-parcelas');
+    if(parcSel&&parcNum){
+      for(var pi=0;pi<parcSel.options.length;pi++){
+        if(parseInt(parcSel.options[pi].value)===parcNum){parcSel.selectedIndex=pi;filled++;break;}
+      }
+    }
+  }
+
+  // ══ ATIVIDADE PROFISSIONAL ════════════════════════════════════════════════
+  var ocup=get('Ocupação');
+  fillSel('fc-ocup', ocup, {
+    'assalariado privado':'Assalariado (CLT)','assalariado':'Assalariado (CLT)',
+    'clt':'Assalariado (CLT)',
+    'autonomo':'Autônomo / Profissional Liberal','autônomo':'Autônomo / Profissional Liberal',
+    'profissional liberal':'Autônomo / Profissional Liberal',
+    'empresario':'Empresário','empresário':'Empresário',
+    'socio':'Empresário','sócio':'Empresário',
+    'servidor':'Servidor Público',
+    'aposentado':'Aposentado / Pensionista','pensionista':'Aposentado / Pensionista'
+  });
+
+  fill('fc-func',    get('Quantidade de Funcionários'));
+  fill('fc-clientes',get('Principais Clientes'));
+  fill('fc-serv',    get(['Serviços/Produtos oferecidos','Serviços Produtos oferecidos']));
+  fill('fc-site',    get('Redes Sociais'));
+
+  fillSel('fc-sede', get('Condição da Sede da Empresa'),{
+    'propria':'Própria','própria':'Própria','alugada':'Alugada'
+  });
+
+  fillMoney('fc-fat',  get('Faturamento Mensal'));
+  fillMoney('fc-custo',get('Custo Fixo Mensal'));
+
+  // Emite NF: se tem comissão ou é PJ deduz Sim
+  var comissao=get('Comissão');
+  var pjpf=get(['Retiradas da empresa são creditadas na conta PF ou PJ?','Retiradas da empresa']); 
+  var nfVal='Não';
+  if(comissao&&/sim/i.test(comissao)) nfVal='Sim';
+  if(pjpf&&/pj/i.test(pjpf)) nfVal='Sim';
+  fillSel('fc-nf',null);
+  var nfEl=document.getElementById('fc-nf');
+  if(nfEl){for(var ni=0;ni<nfEl.options.length;ni++){if(nfEl.options[ni].text===nfVal){nfEl.selectedIndex=ni;break;}}}
+
+  // ══ FEEDBACK ═════════════════════════════════════════════════════════════
+  calcularLiquidoFicha();
+  st.innerHTML='<span style="color:var(--green)">✓ '+filled+' campo(s) preenchido(s). Confira e complete os dados faltantes.</span>';
+  showToast(filled+' campos preenchidos!','success');
+}
+function preencherExemplo(){
+  document.getElementById('dataNasc').value='1976-01-09';
+  setVal('telefoneCliente','(55) 98454-7315');
+  document.getElementById('tipoImovel').value='sala_loja';
+  setVal('valorImovel','520.000,00');
+  setVal('valorCredito','240.000,00');
+  document.getElementById('prazo').value='240';
+  document.getElementById('finalidade').value='dividas';
+  document.getElementById('negativado').value='false';
+  document.getElementById('despachante').value='nao';
+  setVal('rendaTotal','100.000,00');
+  document.getElementById('ocupacao').value='autonomo';
+  document.getElementById('estadoCivil').value='casado';
+  document.getElementById('emiteNF').value='sim';
+  document.getElementById('contrato').value='nao';
+  atualizarTaxa();
+  showToast('Exemplo carregado — Marcelo Saldanha','success');
+}
+
+// ── LOGO BANCO ────────────────────────────────────────────────────────────────
+function logoHTML(b,size){
+  size=size||38;
+  return '<div style="background:'+b.cor+'22;width:'+size+'px;height:'+size+'px;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:0.5px solid '+b.cor+'44">'
+    +'<img src="'+b.logo+'" alt="'+b.nome+'" '
+    +'onerror="this.parentNode.style.background=\''+b.cor+'44\';this.parentNode.innerHTML=\'<span style=color:'+b.cor+';font-size:'+Math.round(size*.28)+'px;font-weight:700;letter-spacing:-1px>'+b.sigla+'</span>\'" '
+    +'style="width:100%;height:100%;object-fit:contain;padding:'+Math.round(size*.1)+'px">'
+    +'</div>';
+}
+
+// ── COLETAR DADOS ─────────────────────────────────────────────────────────────
+function coletarDados(){
+  return {
+    nome:getVal('nomeCliente'),telefone:getVal('telefoneCliente'),
+    tipoIm:getVal('tipoImovel'),regularizado:getVal('regularizado'),
+    valorImovel:unFmt(getVal('valorImovel')),valorCredito:unFmt(getVal('valorCredito')),
+    prazo:parseInt(getVal('prazo'))||240,finalidade:getVal('finalidade'),
+    negativado:getVal('negativado')==='true',despachante:getVal('despachante')==='sim',
+    possuiIQ:getVal('possuiIQ')==='sim',vlDebitoIQ:unFmt(getVal('vlDebitoIQ')),
+    renda:unFmt(getVal('rendaTotal')),ocupacao:getVal('ocupacao'),
+    estadoCivil:getVal('estadoCivil'),emiteNF:getVal('emiteNF'),contrato:getVal('contrato'),
+    taxaInput:parseFloat(getVal('taxaJuros').replace(',','.'))||0
+  };
+}
+
+// ── CALCULAR ──────────────────────────────────────────────────────────────────
+function calcularResultado(d){
+  var taxa=d.taxaInput?d.taxaInput/100:getTaxaAuto();
+  var ltv=d.valorCredito/d.valorImovel;
+  var isComercial=d.tipoIm==='sala_loja'||d.tipoIm==='outros';
+  var isTerreno=d.tipoIm==='terreno';
+  var regulOk=d.regularizado==='sim';
+
+  // IQ: saldo devedor é abatido do crédito — banco libera o valor cheio,
+  // parte quita a dívida, parte vai para o cliente
+  var saldoIQ=d.possuiIQ&&d.vlDebitoIQ>0?d.vlDebitoIQ:0;
+  var creditoLiquido=Math.max(0,d.valorCredito-saldoIQ);
+
+  var iof=d.valorCredito*IOF;
+  var moneyPlus=d.valorCredito*ALIQ_TAC;
+  var totalFin=d.valorCredito+iof+moneyPlus+TAC_BPO;
+  var custas=5683.19,avalBens=72000.00;
+
+  var parcelaPrice=pmt(taxa*100,d.prazo,totalFin)+TX_ADM;
+  var amortSAC=totalFin/d.prazo;
+  var sac1Val=amortSAC+totalFin*taxa+TX_ADM;
+  var sacUlt=amortSAC+amortSAC*taxa+TX_ADM;
+
+  var compPrice=d.renda>0?parcelaPrice/d.renda:99;
+  var compSAC=d.renda>0?sac1Val/d.renda:99;
+  var rendaMinPrice=parcelaPrice/COMP_MAX;
+  var rendaMinSAC=sac1Val/COMP_MAX;
+  var rendaOkPrice=d.renda>=rendaMinPrice;
+  var rendaOkSAC=d.renda>=rendaMinSAC;
+  var ltvOk=ltv<=LTV_MAX;
+  var ltvColor=ltv<=0.40?'green':ltv<=0.50?'warn':'red';
+
+  var aprovados=[],reprovados=[];
+  for(var i=0;i<bancos.length;i++){
+    var b=bancos[i];
+    var ltvMax=isTerreno?0:(isComercial?b.ltvComerc:b.ltvResid);
+    var prazoBco=Math.min(d.prazo,b.prazoMax);
+    var parcelaB=pmt(b.taxa,prazoBco,totalFin)+TX_ADM;
+    var totalPagoB=parcelaB*prazoBco;
+    var compBruto=d.renda>0?parcelaB/d.renda:0;
+    var motivos=[];
+    if(ltvMax===0) motivos.push('Não opera '+(isTerreno?'terreno':isComercial?'comercial':'residencial'));
+    else if(ltv>ltvMax) motivos.push('LTV '+pct(ltv,1)+' > máx '+pct(ltvMax,0));
+    if(d.renda>0&&b.rendaMin>0&&d.renda<b.rendaMin) motivos.push('Renda mín '+brl(b.rendaMin));
+    if(d.negativado&&!b.negativado) motivos.push('Não aceita negativado');
+    if(d.renda>0&&compBruto>COMP_MAX) motivos.push('Comp. '+pct(compBruto,1)+' > 33%');
+    if(b.vlImovelMin>0&&d.valorImovel>0&&d.valorImovel<b.vlImovelMin) motivos.push('Imóvel mín '+brl(b.vlImovelMin));
+    if(b.vlCreditoMin>0&&d.valorCredito>0&&d.valorCredito<b.vlCreditoMin) motivos.push('Crédito mín '+brl(b.vlCreditoMin));
+    if(b.vlCreditoMax>0&&d.valorCredito>b.vlCreditoMax) motivos.push('Crédito máx '+brl(b.vlCreditoMax));
+    if(d.possuiIQ&&!b.fazIQ) motivos.push('Não faz IQ');
+    if(!regulOk&&!b.aceitaNaoAverbado) motivos.push('Exige imóvel averbado');
+    if(motivos.length>0){reprovados.push({b:b,motivos:motivos});continue;}
+    aprovados.push({b:b,ltvMax:ltvMax,prazoBco:prazoBco,parcelaB:parcelaB,totalPagoB:totalPagoB,compBruto:compBruto,compLiq:compBruto});
+  }
+  aprovados.sort(function(a,z){return a.b.taxa-z.b.taxa;});
+
+  return {taxa:taxa,ltv:ltv,isComercial:isComercial,regulOk:regulOk,
+    saldoIQ:saldoIQ,creditoLiquido:creditoLiquido,
+    iof:iof,moneyPlus:moneyPlus,totalFin:totalFin,custas:custas,avalBens:avalBens,
+    parcelaPrice:parcelaPrice,sac1Val:sac1Val,sacUlt:sacUlt,
+    compPrice:compPrice,compSAC:compSAC,rendaMinPrice:rendaMinPrice,rendaMinSAC:rendaMinSAC,
+    rendaOkPrice:rendaOkPrice,rendaOkSAC:rendaOkSAC,ltvOk:ltvOk,ltvColor:ltvColor,
+    aprovados:aprovados,reprovados:reprovados};
+}
+
+// ── RENDERIZAR RESULTADO ──────────────────────────────────────────────────────
+function renderResultado(d,r){
+  // COLUNA ESQUERDA
+  var left='';
+  left+='<div class="metrics" style="grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:1rem">';
+  left+='<div class="metric"><div class="lbl">LTV</div><div class="val '+r.ltvColor+'">'+pct(r.ltv,1)+'</div><div class="sub">máx 50%</div></div>';
+  left+='<div class="metric"><div class="lbl">Total Financiado</div><div class="val gold">'+brl(r.totalFin)+'</div><div class="sub">crédito + IOF + taxas</div></div>';
+  left+='<div class="metric"><div class="lbl">Taxa mensal</div><div class="val gold">'+pct(r.taxa,2)+'</div><div class="sub">a.m.</div></div>';
+  left+='<div class="metric"><div class="lbl">Renda mín. PRICE</div><div class="val '+(r.rendaOkPrice?'green':'red')+'">'+brl(r.rendaMinPrice)+'</div><div class="sub">'+(r.rendaOkPrice?'✓ atende':'✗ insuf.')+'</div></div>';
+  left+='</div>';
+  if(!r.ltvOk) left+='<div class="alert danger"><span class="alert-icon">✗</span><span><strong>LTV excedido:</strong> solicitar máx '+brl(d.valorImovel*0.50)+'</span></div>';
+  if(!r.regulOk) left+='<div class="alert warn"><span class="alert-icon">⚠</span><span>Imóvel sem regularização completa — alguns bancos exigem averbação</span></div>';
+  if(d.negativado) left+='<div class="alert warn"><span class="alert-icon">⚠</span><span>Cliente negativado — apenas Galleria Bank e Made Capital aceitam</span></div>';
+  if(d.possuiIQ&&r.saldoIQ>0) left+='<div class="alert warn"><span class="alert-icon">⚠</span><span><strong>IQ:</strong> saldo de '+brl(r.saldoIQ)+' será quitado pelo banco. Crédito líquido ao cliente: <strong>'+brl(r.creditoLiquido)+'</strong>. Apenas bancos que fazem IQ foram considerados.</span></div>';
+  if(!r.rendaOkPrice&&d.renda>0) left+='<div class="alert warn"><span class="alert-icon">⚠</span><span><strong>Renda insuficiente (PRICE):</strong> declarada '+brl(d.renda)+' — mínimo '+brl(r.rendaMinPrice)+'</span></div>';
+
+  left+='<div class="section-title" style="margin:1rem 0 0.5rem">Price × SAC</div>';
+  left+='<div style="background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">';
+  left+='<table class="comp-table" style="margin:0"><thead><tr><th>Sistema</th><th>1ª Parcela</th><th>Renda Mín.</th><th>Comp.</th><th>Status</th></tr></thead><tbody>';
+  left+='<tr'+(r.rendaOkPrice&&r.ltvOk?' class="best"':'')+'>'+
+    '<td style="font-weight:600;color:var(--text)">PRICE</td>'+
+    '<td class="'+(r.rendaOkPrice?'val-gold':'')+'">'+brl(r.parcelaPrice)+'</td>'+
+    '<td class="'+(r.rendaOkPrice?'val-green':'val-red')+'">'+brl(r.rendaMinPrice)+'</td>'+
+    '<td class="'+(r.compPrice<=0.33?'val-green':r.compPrice<=0.40?'val-warn':'val-red')+'">'+pct(r.compPrice,1)+'</td>'+
+    '<td><span class="badge '+(r.rendaOkPrice&&r.ltvOk?'green':'red')+'">'+(r.rendaOkPrice&&r.ltvOk?'OK':'Rep.')+'</span></td></tr>';
+  left+='<tr'+(r.rendaOkSAC&&r.ltvOk?' class="best"':'')+'>'+
+    '<td style="font-weight:600;color:var(--text)">SAC</td>'+
+    '<td class="'+(r.rendaOkSAC?'val-warn':'')+'">'+brl(r.sac1Val)+'</td>'+
+    '<td class="'+(r.rendaOkSAC?'val-green':'val-red')+'">'+brl(r.rendaMinSAC)+'</td>'+
+    '<td class="'+(r.compSAC<=0.33?'val-green':r.compSAC<=0.40?'val-warn':'val-red')+'">'+pct(r.compSAC,1)+'</td>'+
+    '<td><span class="badge '+(r.rendaOkSAC&&r.ltvOk?'green':'red')+'">'+(r.rendaOkSAC&&r.ltvOk?'OK':'Rep.')+'</span></td></tr>';
+  left+='</tbody></table></div>';
+  left+='<div style="font-size:11px;color:var(--text3);margin-top:5px">Comprometimento máximo: 33% da renda bruta (planilha). PRICE: parcela fixa. SAC: decrescente.</div>';
+
+  left+='<div class="section-title" style="margin:1rem 0 0.5rem">Composição do financiado</div>';
+  left+='<div style="background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">';
+  left+='<table class="comp-table" style="margin:0"><thead><tr><th>Item</th><th>Valor</th></tr></thead><tbody>';
+  left+='<tr><td>Crédito solicitado</td><td class="val-gold">'+brl(d.valorCredito)+'</td></tr>';
+  if(r.saldoIQ>0){
+    left+='<tr><td style="color:var(--warn)">(-) Quitação IQ</td><td style="color:var(--warn)">- '+brl(r.saldoIQ)+'</td></tr>';
+    left+='<tr><td style="font-weight:600;color:var(--text)">Crédito líquido ao cliente</td><td class="val-green" style="font-weight:700">'+brl(r.creditoLiquido)+'</td></tr>';
+  }
+  left+='<tr><td>IOF (3,38%)</td><td>'+brl(r.iof)+'</td></tr>';
+  left+='<tr><td>Money Plus (0,4%)</td><td>'+brl(r.moneyPlus)+'</td></tr>';
+  left+='<tr><td>TAC BPO (fixo)</td><td>'+brl(TAC_BPO)+'</td></tr>';
+  left+='<tr style="border-top:1px solid var(--border2)"><td style="font-weight:600;color:var(--text)">Total Financiado</td><td class="val-gold" style="font-weight:700">'+brl(r.totalFin)+'</td></tr>';
+  left+='<tr><td style="color:var(--text3)">Custas cartoriais (fora)</td><td style="color:var(--text3)">'+brl(r.custas)+'</td></tr>';
+  left+='<tr><td style="color:var(--text3)">Avaliação do bem (fora)</td><td style="color:var(--text3)">'+brl(r.avalBens)+'</td></tr>';
+  left+='</tbody></table></div>';
+
+  left+='<div class="section-title" style="margin:1rem 0 0.5rem">Checklist</div>';
+  var checks=[];
+  if(d.estadoCivil==='casado'||d.estadoCivil==='uniaoEstavel') checks.push({ok:false,msg:'Cônjuge: interveniente anuente ou codevedor'});
+  if(d.ocupacao==='autonomo'&&d.emiteNF==='sim') checks.push({ok:true,msg:'Autônomo c/ NF: extratos 6m + DECORE'});
+  if(d.ocupacao==='autonomo'&&d.contrato==='nao') checks.push({ok:false,msg:'Sem contrato: reforçar comprovação de renda'});
+  if(d.tipoIm==='sala_loja'||d.tipoIm==='outros') checks.push({ok:false,msg:'Imóvel comercial: certidão IPTU + laudémio'});
+  checks.push({ok:r.ltv<=0.40,msg:'LTV '+pct(r.ltv,1)+' — '+(r.ltv<=0.40?'excelente garantia':'margem reduzida')});
+  checks.push({ok:r.regulOk,msg:r.regulOk?'Imóvel regularizado com matrícula':'Regularização pendente'});
+  for(var ci=0;ci<checks.length;ci++){
+    left+='<div class="alert '+(checks[ci].ok?'success':'warn')+'" style="margin-bottom:5px"><span class="alert-icon">'+(checks[ci].ok?'✓':'⚠')+'</span><span style="font-size:11px">'+checks[ci].msg+'</span></div>';
+  }
+
+  // COLUNA DIREITA — bancos
+  var right='';
+  if(r.aprovados.length===0){
+    right+='<div class="alert danger"><span class="alert-icon">✗</span><span>Nenhum banco elegível para esse perfil.</span></div>';
+  } else {
+    right+='<div style="font-size:12px;color:var(--text3);margin-bottom:12px">'+r.aprovados.length+' banco(s) elegível(is) de '+bancos.length+' analisados — ordenado por menor taxa</div>';
+    for(var ai=0;ai<r.aprovados.length;ai++){
+      var ap=r.aprovados[ai];
+      var b=ap.b;
+      var isTop=ai===0;
+      var isMade=!!b.madeCapital;
+      var badgeClass=isMade?'warn':isTop?'gold':'green';
+      var badgeText=isMade?'⚠ verificar':isTop?'★ melhor opção':'aprovado';
+
+      right+='<div class="bank-card'+(isTop&&!isMade?' top':'')+(isMade?' made-card':'')+'">'+
+        '<div class="bc-header">'+
+          '<div class="bc-left">'+logoHTML(b,38)+
+            '<div><div class="bank-name">'+b.nome+'</div>'+
+            '<div class="bank-sub">LTV máx '+pct(ap.ltvMax,0)+' · Prazo '+ap.prazoBco+'m</div></div>'+
+          '</div>'+
+          '<span class="badge '+badgeClass+'">'+badgeText+'</span>'+
+        '</div>'+
+        (isMade?'<div class="alert warn" style="margin-bottom:10px;padding:7px 10px"><span class="alert-icon" style="font-size:12px">⚠</span><span style="font-size:11px"><strong>*verificar</strong> — perfil muito específico. Indicado apenas para operações de curto prazo / bridge.</span></div>':'')+
+        '<div class="bc-stats5">'+
+          '<div class="bc-stat5"><div class="stat-lbl">Taxa Mensal</div><div class="stat-val gold">'+b.taxa.toFixed(2)+'%</div></div>'+
+          '<div class="bc-stat5"><div class="stat-lbl">Parcela Est.</div><div class="stat-val">'+brl(ap.parcelaB)+'</div></div>'+
+          '<div class="bc-stat5"><div class="stat-lbl">Total Pago</div><div class="stat-val">'+brl(ap.totalPagoB)+'</div></div>'+
+          '<div class="bc-stat5"><div class="stat-lbl">Comp. Renda Bruta</div><div class="stat-val '+(d.renda>0?(ap.compBruto<=0.25?'green':ap.compBruto<=0.33?'warn':'red'):'')+'">'+(d.renda>0?pct(ap.compBruto,1):'—')+'</div></div>'+
+          '<div class="bc-stat5"><div class="stat-lbl">Comp. Renda Líq.</div><div class="stat-val '+(d.renda>0?(ap.compLiq<=0.33?'green':ap.compLiq<=0.40?'warn':'red'):'')+'">'+(d.renda>0?pct(ap.compLiq,1):'—')+'</div></div>'+
+        '</div>'+
+        '<div class="score-bar" style="margin-top:6px"><div class="score-fill" style="width:'+(isTop&&!isMade?100:Math.max(20,Math.round((1-(b.taxa-0.99)/2.1)*100)))+'%"></div></div>'+
+        '<div class="obs-tag">'+b.obs+'</div>'+
+      '</div>';
+    }
+  }
+  if(r.reprovados.length>0){
+    right+='<div class="section-title" style="margin:1rem 0 0.5rem">Não elegíveis</div>';
+    for(var ri=0;ri<r.reprovados.length;ri++){
+      var rp=r.reprovados[ri];
+      right+='<div class="denied-item">'+
+        '<div style="width:26px;height:26px;border-radius:6px;background:'+rp.b.cor+'22;border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+
+        '<img src="'+rp.b.logo+'" alt="'+rp.b.nome+'" onerror="this.parentNode.innerHTML=\'<span style=color:'+rp.b.cor+';font-size:9px;font-weight:700>'+rp.b.sigla+'</span>\'" style="width:100%;height:100%;object-fit:contain;padding:3px"></div>'+
+        '<div class="denied-name">'+rp.b.nome+'</div>'+
+        '<div class="denied-reason">'+rp.motivos.join(' · ')+'</div></div>';
+    }
+  }
+
+  return '<div class="result-cols">'
+    +'<div class="result-col"><div class="result-col-header"><div class="col-icon">📋</div>Resultado do Crédito</div>'+left+'</div>'
+    +'<div class="result-col"><div class="result-col-header"><div class="col-icon">🏦</div>Resultado Consultor</div>'+right+'</div>'
+    +'</div>';
+}
+
+// ── SIMULAR ───────────────────────────────────────────────────────────────────
+function simular(){
+  var d=coletarDados();
+  if(!d.valorImovel||!d.valorCredito){showToast('Preencha valor do imóvel e crédito.','');return;}
+  if(!d.taxaInput&&!getTaxaAuto()){showToast('Informe a taxa de juros.','');return;}
+  if(modoAPI()){
+    showToast('Calculando...','');
+    simularAPI(d).then(function(apiRes){
+      if(!apiRes) return;
+      var r = converterResultadoAPI(apiRes, d);
+      window._lastDados=d; window._lastRes=r;
+      var html=renderResultado(d,r);
+      var hasKey=!!getApiKey();
+      var btnRow='<div class="btn-row" style="margin-top:1.5rem">'
+        +'<button class="btn btn-ai" id="btn-gerar-ia" onclick="gerarAnaliseIA()"'+(hasKey?'':' disabled')+'>✦ Gerar análise com IA</button>'
+        +'<button class="btn btn-primary" onclick="salvarFichaSimulacao()">Salvar ficha</button>'
+        +(hasKey?'':'<span style="font-size:12px;color:var(--text3);align-self:center">→ <u style="cursor:pointer;color:var(--purple)" onclick="switchMain(\'config\')">Configurar IA</u></span>')
+        +'</div><div id="ai-analysis-container"></div>';
+      var rc=document.getElementById('resultado-conteudo');
+      rc.innerHTML=html+btnRow; rc.style.display='block';
+      document.getElementById('resultado-vazio').style.display='none';
+      switchTab('resultado');
+      showToast('Simulação concluída!','success');
+    });
+    return;
+  }
+  // Modo local (sem API)
+  var r=calcularResultado(d);
+  var html=renderResultado(d,r);
+  var btnRow='<div class="btn-row" style="margin-top:1.5rem">'
+    +'<button class="btn btn-ai" id="btn-gerar-ia" onclick="gerarAnaliseIA()">✦ Gerar análise com IA</button>'
+    +'<button class="btn btn-ghost" onclick="switchMain(\'ficha\')">📋 Ir para Ficha Cadastral</button>'
+    +'</div><div id="ai-analysis-container"></div>';
+  var rc=document.getElementById('resultado-conteudo');
+  rc.innerHTML=html+btnRow;
+  rc.style.display='block';
+  document.getElementById('resultado-vazio').style.display='none';
+  switchTab('resultado');
+  window._lastDados=d;window._lastRes=r;
+}
+
+// ── IA (Claude — Anthropic) ───────────────────────────────────────────────────
+async function gerarAnaliseIA(){
+  var d=window._lastDados,r=window._lastRes;
+  if(!d){showToast('Simule primeiro.','');return;}
+  var btn=document.getElementById('btn-gerar-ia');
+  var container=document.getElementById('ai-analysis-container');
+  btn.disabled=true;btn.textContent='Analisando...';
+  container.innerHTML='<div class="ai-block"><div class="ai-block-header"><div class="ai-icon">✦</div><div><div class="ai-block-title">Análise em andamento</div><div class="ai-block-sub">Claude lendo o perfil...</div></div></div><div class="ai-loading"><div class="ai-dots"><span></span><span></span><span></span></div><span>Gerando parecer e devolutiva...</span></div></div>';
+  var aprovStr=r.aprovados.map(function(a){return a.b.nome+' ('+a.b.taxa+'%a.m., parcela '+brl(a.parcelaB)+', comp.'+(d.renda>0?pct(a.compBruto,1):'N/I')+')';}).join('; ')||'nenhum';
+  var reprStr=r.reprovados.map(function(rp){return rp.b.nome+': '+rp.motivos.join(', ');}).join('; ')||'nenhum';
+  var aprovado=(r.rendaOkPrice||r.rendaOkSAC)&&r.ltvOk;
+  var prompt='Você é especialista sênior em crédito imobiliário brasileiro, home equity. Analise o perfil abaixo e retorne SOMENTE um JSON válido (sem markdown, sem texto fora do JSON) com as chaves "parecer_interno" e "devolutiva_cliente".\n\nPERFIL: '+d.nome+' | '+d.ocupacao+' | Renda '+brl(d.renda)+'/mês | '+d.estadoCivil+' | NF:'+d.emiteNF+'\nIMÓVEL: '+d.tipoIm+' | '+brl(d.valorImovel)+' | LTV '+pct(r.ltv,1)+'\nCRÉDITO: '+brl(d.valorCredito)+' | Total '+brl(r.totalFin)+' | '+pct(r.taxa,2)+'a.m. | '+d.prazo+'m\nPRICE: '+brl(r.parcelaPrice)+' | comp.'+pct(r.compPrice,1)+' | '+(r.rendaOkPrice&&r.ltvOk?'ELEGÍVEL':'REPROVADO')+'\nSAC: '+brl(r.sac1Val)+' | comp.'+pct(r.compSAC,1)+' | '+(r.rendaOkSAC&&r.ltvOk?'ELEGÍVEL':'REPROVADO')+'\nBANCOS APROVADOS: '+aprovStr+'\nBANCOS REPROVADOS: '+reprStr+'\n\nparecer_interno: análise técnica detalhada para o consultor (pontos fortes, riscos, recomendações).\ndevolutiva_cliente: texto amigável para enviar ao cliente por WhatsApp ou e-mail.';
+  try{
+    var resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
+        messages:[{role:'user',content:prompt}]})});
+    if(!resp.ok){var err=await resp.json();throw new Error((err.error&&err.error.message)||'Erro '+resp.status);}
+    var data=await resp.json();
+    var raw=data.content.map(function(i){return i.text||'';}).join('');
+    var clean=raw.replace(/```json|```/g,'').trim();
+    var parsed=JSON.parse(clean);
+    renderAIBlock(parsed,d,r);
+    btn.textContent='✦ Regenerar análise';btn.disabled=false;
+  }catch(e){
+    container.innerHTML='<div class="alert danger" style="margin-top:1rem"><span class="alert-icon">✗</span><span>Erro: '+e.message+'</span></div>';
+    btn.textContent='✦ Gerar análise com IA';btn.disabled=false;
+  }
+}
+function renderAIBlock(parsed,d,r){
+  var container=document.getElementById('ai-analysis-container');
+  var aprovado=(r.rendaOkPrice||r.rendaOkSAC)&&r.ltvOk;
+  function fmtP(txt){
+    if(!txt)return '';
+    var lines=txt.split('\n'),out='';
+    for(var i=0;i<lines.length;i++){
+      var l=lines[i];if(!l.trim())continue;
+      if(/^[0-9]+\)/.test(l.trim())){out+='<h4>'+l.replace(/^[0-9]+\)\s*/,'')+'</h4>';}
+      else{out+='<p>'+l+'</p>';}
+    }
+    return out;
+  }
+  container.innerHTML='<div class="ai-block"><div class="ai-block-header"><div class="ai-icon">✦</div><div>'
+    +'<div class="ai-block-title">Análise IA — '+(d.nome||'Cliente')+'</div>'
+    +'<div class="ai-block-sub">Claude · '+(aprovado?'Perfil elegível':'Perfil não elegível')+'</div>'
+    +'</div><span class="badge '+(aprovado?'green':'red')+'" style="margin-left:auto">'+(aprovado?'Aprovado':'Não aprovado')+'</span></div>'
+    +'<div class="ai-tabs"><button class="ai-tab active" onclick="switchAITab(\'parecer\')">Parecer interno</button>'
+    +'<button class="ai-tab" onclick="switchAITab(\'devolutiva\')">Devolutiva ao cliente</button></div>'
+    +'<div id="ai-panel-parecer" class="ai-panel active"><div class="ai-content">'+fmtP(parsed.parecer_interno)+'</div></div>'
+    +'<div id="ai-panel-devolutiva" class="ai-panel"><button class="copy-btn" onclick="copiarDevolutiva()">Copiar texto</button>'
+    +'<div class="ai-devolutiva" id="devolutiva-text">'+(parsed.devolutiva_cliente||'')+'</div></div></div>';
+  window._devolutivaText=parsed.devolutiva_cliente||'';
+}
+function switchAITab(id){
+  var panels=document.querySelectorAll('.ai-panel'),tabs=document.querySelectorAll('.ai-tab');
+  for(var i=0;i<panels.length;i++){panels[i].classList.toggle('active',(i===0&&id==='parecer')||(i===1&&id==='devolutiva'));}
+  for(var j=0;j<tabs.length;j++){tabs[j].classList.toggle('active',(j===0&&id==='parecer')||(j===1&&id==='devolutiva'));}
+}
+function copiarDevolutiva(){
+  navigator.clipboard.writeText(window._devolutivaText||'')
+    .then(function(){showToast('Texto copiado!','success');})
+    .catch(function(){showToast('Erro ao copiar.','error');});
+}
+
+// ── SALVAR FICHAS ─────────────────────────────────────────────────────────────
+function salvarFichaSimulacao(){
+  if(!window._lastDados){showToast('Simule primeiro.','');return;}
+  var d=window._lastDados;
+  var fichas=getFichas();
+  var f=Object.assign({},d,{id:gerarId(),criadoEm:Date.now(),tipo:'simulacao',
+    nome:d.nome||'Cliente sem nome',vlIm:d.valorImovel,vlCred:d.valorCredito,
+    resultadoHTML:document.getElementById('resultado-conteudo')?document.getElementById('resultado-conteudo').innerHTML:''});
+  fichas.push(f);saveFichas(fichas);renderSidebar();renderFichasSection();
+  showToast('Ficha de '+(d.nome||'cliente')+' salva!','success');
+}
+function salvarFichaCadastral(){
+  var nome=getVal('fc-nome');
+  if(!nome){showToast('Informe o nome do cliente.','');return;}
+  var fichas=getFichas();
+  fichas.push({id:gerarId(),criadoEm:Date.now(),tipo:'cadastral',nome:nome,
+    cpf:getVal('fc-cpf'),telefone:getVal('fc-tel'),email:getVal('fc-email'),
+    nascimento:getVal('fc-nasc'),profissao:getVal('fc-prof'),estadoCivil:getVal('fc-ec'),
+    cnjNome:getVal('fc-cnjNome'),cnjCpf:getVal('fc-cnjCpf'),
+    cep:getVal('fc-cepIm'),logradouro:getVal('fc-logradouro'),numero:getVal('fc-num'),bairro:getVal('fc-bairro'),
+    cidade:getVal('fc-cidadeIm'),uf:getVal('fc-ufIm'),
+    cidadeImovel:getVal('fc-cidadeIm'),ufImovel:getVal('fc-ufIm'),
+    classImovel:getVal('fc-classIm'),tipoImovel:getVal('fc-tipoIm'),regularizacao:getVal('fc-reg'),
+    vlImovel:unFmt(getVal('fc-vlIm')),vlCredito:unFmt(getVal('fc-vlCred')),
+    parcelas:getVal('fc-parcelas'),motivo:getVal('fc-motivo'),
+    ocupacao:getVal('fc-ocup'),profServicos:getVal('fc-serv'),funcionarios:getVal('fc-func'),
+    sede:getVal('fc-sede'),site:getVal('fc-site'),clientes:getVal('fc-clientes'),
+    faturamento:unFmt(getVal('fc-fat')),custoFixo:unFmt(getVal('fc-custo')),
+    emiteNF:getVal('fc-nf'),contrato:getVal('fc-contrato'),
+    possuiIQ:getVal('fc-iq'),iqTipo:getVal('fc-iqTipo'),
+    iqValor:unFmt(getVal('fc-iqValor')),iqObs:getVal('fc-iqObs'),
+    resultadoHTML:''});
+  saveFichas(fichas);renderSidebar();renderFichasSection();
+  showToast('Ficha cadastral de '+nome+' salva!','success');
+}
+function preencherExemploFicha(){
+  setVal('fc-nome','Marcelo Saldanha');setVal('fc-cpf','909.284.580-91');
+  document.getElementById('fc-nasc').value='1976-01-09';
+  setVal('fc-tel','(55) 98454-7315');setVal('fc-email','marcelomsaldanha@icloud.com');
+  setVal('fc-prof','Dentista');setVal('fc-nac','Brasileiro');
+  setVal('fc-nat','Palmeiras das Missões / RS');document.getElementById('fc-ec').value='Casado(a)';
+  setVal('fc-cnjNome','Cristiane Martel');setVal('fc-cnjCpf','909.284.580-91');
+  document.getElementById('fc-cnjNasc').value='1976-01-09';
+  setVal('fc-cnjNat','Palmeira das Missões / RS');setVal('fc-cnjEmail','marcelomsaldanha@icloud.com');
+  setVal('fc-cepIm','98700-000');setVal('fc-cidadeIm','Ijuí');setVal('fc-ufIm','RS');
+  setVal('fc-logradouro','Rua Exemplo');setVal('fc-num','123');setVal('fc-bairro','Centro');
+  document.getElementById('fc-classIm').value='Comercial';document.getElementById('fc-tipoIm').value='Sala Comercial';
+  setVal('fc-vlIm','520.000,00');setVal('fc-vlCred','240.000,00');
+  document.getElementById('fc-parcelas').value='240';setVal('fc-motivo','Pagamento de dívidas');
+  document.getElementById('fc-ocup').value='Autônomo / Profissional Liberal';
+  setVal('fc-serv','Odontologia');setVal('fc-func','5');
+  document.getElementById('fc-sede').value='Própria';setVal('fc-site','www.drmarcelosaldanha.com.br');
+  setVal('fc-clientes','Atende mais de 250 cidades no RS');
+  setVal('fc-fat','100.000,00');setVal('fc-custo','30.000,00');
+  document.getElementById('fc-nf').value='Sim';document.getElementById('fc-contrato').value='Não';
+  showToast('Exemplo carregado — Marcelo Saldanha','success');
+}
+function limparFicha(){
+  var els=document.querySelectorAll('#view-ficha input, #view-ficha select');
+  for(var i=0;i<els.length;i++){
+    if(els[i].tagName==='SELECT')els[i].selectedIndex=0;
+    else if(els[i].type!=='checkbox')els[i].value='';
+  }
+}
+
+// ── SIDEBAR ───────────────────────────────────────────────────────────────────
+function renderSidebar(){
+  var fichas=getFichas();
+  var badge=document.getElementById('fichas-count-badge');
+  if(badge)badge.textContent=fichas.length;
+}
+
+// ── SEÇÃO FICHAS CADASTRAIS ───────────────────────────────────────────────────
+var _fichasView='grid';
+function setFichasView(mode){
+  _fichasView=mode;
+  var btnGrid=document.getElementById('btn-view-grid');
+  var btnList=document.getElementById('btn-view-list');
+  if(btnGrid&&btnList){
+    if(mode==='grid'){
+      btnGrid.style.background='var(--gold-bg)';btnGrid.style.color='var(--gold)';
+      btnList.style.background='none';btnList.style.color='var(--text3)';
+    } else {
+      btnList.style.background='var(--gold-bg)';btnList.style.color='var(--gold)';
+      btnGrid.style.background='none';btnGrid.style.color='var(--text3)';
+    }
+  }
+  renderFichasSection();
+}
+function renderFichasSection(){
+  var fichas=getFichas();
+  var busca=(document.getElementById('fichas-search-input')||{value:''}).value.toLowerCase().trim();
+  var total=fichas.length;
+  var t=document.getElementById('fichas-total-txt');
+  if(t)t.textContent=total+' ficha'+(total===1?'':'s');
+  var grid=document.getElementById('fichas-section-grid');
+  if(!grid)return;
+  var filtradas=fichas.slice().reverse().filter(function(f){
+    if(!busca)return true;
+    var campos=[f.nome,f.cpf,f.email,f.telefone,f.cidade,f.cidadeImovel,f.profissao,f.ocupacao].join(' ').toLowerCase();
+    return campos.indexOf(busca)>=0;
+  });
+  if(filtradas.length===0){
+    grid.className='';
+    grid.innerHTML='<div class="fichas-empty"><div class="fichas-empty-icon">📂</div>'
+      +(total===0?'<div style="font-size:14px;color:var(--text2)">Nenhuma ficha cadastrada ainda.</div><div style="margin-top:12px"><button class="btn btn-primary" onclick="switchMain(\'ficha\')">+ Nova ficha cadastral</button></div>'
+        :'<div style="font-size:14px;color:var(--text2)">Nenhuma ficha encontrada para "'+busca+'"</div>')
+      +'</div>';
+    return;
+  }
+  var html='';
+  if(_fichasView==='list'){
+    grid.className='fichas-list-view';
+    // Cabeçalho da lista
+    html+='<div style="display:flex;align-items:center;gap:12px;padding:4px 14px;margin-bottom:2px">'
+      +'<div style="width:36px;flex-shrink:0"></div>'
+      +'<div style="flex:1;min-width:0;display:grid;grid-template-columns:160px 100px 110px 110px 1fr;gap:8px">'
+      +'<div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">Nome</div>'
+      +'<div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">Tipo</div>'
+      +'<div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">Crédito</div>'
+      +'<div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">LTV</div>'
+      +'<div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">Data</div>'
+      +'</div><div style="width:65px;flex-shrink:0"></div></div>';
+    for(var i=0;i<filtradas.length;i++){
+      var f=filtradas[i];
+      var ini=(f.nome||'?').split(' ').slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();
+      var data=new Date(f.criadoEm).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+      var vlIm=f.vlImovel||f.vlIm||0;
+      var vlCred=f.vlCredito||f.vlCred||0;
+      var ltv=vlIm?vlCred/vlIm:0;
+      var isCad=f.tipo==='cadastral';
+      html+='<div class="ficha-list-item" onclick="abrirFicha(\''+f.id+'\')">'
+        +'<div class="ficha-list-avatar">'+ini+'</div>'
+        +'<div class="ficha-list-info">'
+          +'<div class="ficha-list-nome">'+(f.nome||'Sem nome')+'</div>'
+          +'<div class="ficha-list-cell"><span class="ficha-card-type '+(isCad?'cadastral':'simulacao')+'" style="margin:0">'+(isCad?'Cadastral':'Simulação')+'</span></div>'
+          +'<div class="ficha-list-cell" style="color:var(--text)">'+(vlCred?brl(vlCred):'—')+'</div>'
+          +'<div class="ficha-list-cell" style="color:var(--gold);font-weight:600">'+(ltv?pct(ltv,1):'—')+'</div>'
+          +'<div class="ficha-list-cell">'+data+'</div>'
+        +'</div>'
+        +'<div class="ficha-list-actions">'
+          +'<button class="ficha-card-btn ficha-card-btn-edit" onclick="event.stopPropagation();editarFichaPorId(\''+f.id+'\')" title="Simular">✎</button>'
+          +'<button class="ficha-card-btn ficha-card-btn-del" onclick="event.stopPropagation();pedirExclusao(\''+f.id+'\')" title="Excluir">✕</button>'
+        +'</div>'
+      +'</div>';
+    }
+  } else {
+    grid.className='fichas-grid';
+    for(var j=0;j<filtradas.length;j++){
+      var f=filtradas[j];
+      var ini=(f.nome||'?').split(' ').slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();
+      var data=new Date(f.criadoEm).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+      var vlIm=f.vlImovel||f.vlIm||0;
+      var vlCred=f.vlCredito||f.vlCred||0;
+      var ltv=vlIm?vlCred/vlIm:0;
+      var renda=f.faturamento||f.renda||0;
+      var isCad=f.tipo==='cadastral';
+      html+='<div class="ficha-card">'
+        +'<div class="ficha-card-top">'
+          +'<div class="ficha-card-avatar">'+ini+'</div>'
+          +'<div class="ficha-card-info">'
+            +'<div class="ficha-card-type '+(isCad?'cadastral':'simulacao')+'">'+(isCad?'📋 Cadastral':'📊 Simulação')+'</div>'
+            +'<div class="ficha-card-nome">'+(f.nome||'Sem nome')+'</div>'
+            +'<div class="ficha-card-meta">'+data+(f.cidade?' · '+f.cidade:'')+'</div>'
+          +'</div>'
+          +'<div class="ficha-card-actions">'
+            +'<button class="ficha-card-btn ficha-card-btn-edit" onclick="editarFichaPorId(\''+f.id+'\')" title="Editar / Simular">✎</button>'
+            +'<button class="ficha-card-btn ficha-card-btn-del" onclick="pedirExclusao(\''+f.id+'\')" title="Excluir">✕</button>'
+          +'</div>'
+        +'</div>'
+        +'<div class="ficha-card-grid">'
+          +'<div class="ficha-card-item"><div class="fc-lbl">Imóvel</div><div class="fc-val">'+(vlIm?brl(vlIm):'—')+'</div></div>'
+          +'<div class="ficha-card-item"><div class="fc-lbl">Crédito</div><div class="fc-val">'+(vlCred?brl(vlCred):'—')+'</div></div>'
+          +'<div class="ficha-card-item"><div class="fc-lbl">LTV</div><div class="fc-val" style="color:var(--gold)">'+(ltv?pct(ltv,1):'—')+'</div></div>'
+          +'<div class="ficha-card-item"><div class="fc-lbl">Renda</div><div class="fc-val">'+(renda?brl(renda)+'/mês':'—')+'</div></div>'
+          +'<div class="ficha-card-item"><div class="fc-lbl">CPF</div><div class="fc-val">'+(f.cpf||'—')+'</div></div>'
+          +'<div class="ficha-card-item"><div class="fc-lbl">Telefone</div><div class="fc-val">'+(f.telefone||'—')+'</div></div>'
+        +'</div>'
+        +'<div style="margin-top:8px;display:flex;gap:6px">'
+          +'<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;flex:1" onclick="abrirFicha(\''+f.id+'\')">Ver detalhes</button>'
+          +'<button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="editarFichaPorId(\''+f.id+'\')">Simular</button>'
+        +'</div>'
+      +'</div>';
+    }
+  }
+  grid.innerHTML=html;
+}
+
+// ── ABRIR / EDITAR FICHA ──────────────────────────────────────────────────────
+var _fichaAtiva=null;
+function abrirFicha(id){
+  var fichas=getFichas(),f=null;
+  for(var i=0;i<fichas.length;i++){if(fichas[i].id===id){f=fichas[i];break;}}
+  if(!f)return;
+  _fichaAtiva=f;
+  var items=document.querySelectorAll('.ficha-item');
+  for(var j=0;j<items.length;j++)items[j].classList.remove('active-ficha');
+  var si=document.getElementById('si-'+id);if(si)si.classList.add('active-ficha');
+  document.getElementById('fs-title').textContent=f.nome||'Cliente';
+  var data=new Date(f.criadoEm).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('fs-subtitle').textContent='Salva em '+data;
+  var ini=(f.nome||'?').split(' ').slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();
+  var vlIm=f.vlImovel||f.vlIm||0,vlCred=f.vlCredito||f.vlCred||0;
+  var ltv=vlIm?vlCred/vlIm:0,renda=f.faturamento||f.renda||0;
+  document.getElementById('fs-perfil').innerHTML='<div class="profile-card">'
+    +'<div class="profile-top"><div class="profile-avatar">'+ini+'</div><div>'
+    +'<div class="profile-name">'+(f.nome||'—')+'</div>'
+    +'<div class="profile-meta">'+(f.profissao||f.ocupacao||'—')+' · '+(f.telefone||'—')+'</div>'
+    +'</div></div><div class="profile-grid">'
+    +'<div class="pf-item"><div class="lbl">CPF</div><div class="val">'+(f.cpf||'—')+'</div></div>'
+    +'<div class="pf-item"><div class="lbl">E-mail</div><div class="val">'+(f.email||'—')+'</div></div>'
+    +'<div class="pf-item"><div class="lbl">Estado Civil</div><div class="val">'+(f.estadoCivil||'—')+'</div></div>'
+    +'<div class="pf-item"><div class="lbl">Valor do Imóvel</div><div class="val">'+(vlIm?brl(vlIm):'—')+'</div></div>'
+    +'<div class="pf-item"><div class="lbl">Crédito</div><div class="val">'+(vlCred?brl(vlCred):'—')+'</div></div>'
+    +'<div class="pf-item"><div class="lbl">LTV</div><div class="val" style="color:var(--gold)">'+(ltv?pct(ltv,1):'—')+'</div></div>'
+    +'<div class="pf-item"><div class="lbl">Renda</div><div class="val">'+(renda?brl(renda)+'/mês':'—')+'</div></div>'
+    +'<div class="pf-item"><div class="lbl">Finalidade</div><div class="val">'+(f.motivo||f.finalidade||'—')+'</div></div>'
+    +'<div class="pf-item"><div class="lbl">IQ</div><div class="val" style="'+(f.possuiIQ==='sim'?'color:var(--warn)':'')+'">'+(f.possuiIQ==='sim'?'Sim — saldo '+brl(f.iqValor||0):'Não')+'</div></div>'
+    +'<div class="pf-item"><div class="lbl">Tipo</div><div class="val">'+(f.tipo==='cadastral'?'Cadastral':'Simulação')+'</div></div>'
+    +'</div></div>'
+    +(f.possuiIQ==='sim'&&f.iqObs?'<div class="alert warn" style="margin-top:10px"><span class="alert-icon">⚠</span><span><strong>IQ:</strong> '+f.iqObs+'</span></div>':'');
+  document.getElementById('fs-resultado').innerHTML=f.resultadoHTML||
+    '<div class="empty-state"><div>Nenhuma simulação salva.</div>'
+    +'<div style="margin-top:8px"><button class="btn btn-ghost" onclick="editarFichaPorId(\''+id+'\')">Abrir para simulação</button></div></div>';
+  switchMain('ficha-salva');
+}
+function carregarNaSimulacao(f){
+  setVal('nomeCliente',f.nome||'');setVal('telefoneCliente',f.telefone||'');
+  if(f.nascimento)document.getElementById('dataNasc').value=f.nascimento;
+  var vlIm=f.vlImovel||f.vlIm||0,vlCred=f.vlCredito||f.vlCred||0;
+  if(vlIm)document.getElementById('valorImovel').value=vlIm.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(vlCred)document.getElementById('valorCredito').value=vlCred.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  var renda=f.faturamento||f.renda||0;
+  if(renda)document.getElementById('rendaTotal').value=renda.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(f.parcelas||f.prazo)document.getElementById('prazo').value=f.parcelas||f.prazo||240;
+  if(f.negat!==undefined)document.getElementById('negativado').value=f.negat?'true':'false';
+  // IQ
+  var iqSel=document.getElementById('possuiIQ');
+  if(iqSel){iqSel.value=(f.possuiIQ==='sim')?'sim':'nao';toggleIQ();}
+  if(f.possuiIQ==='sim'&&f.iqValor){
+    var iqEl=document.getElementById('vlDebitoIQ');
+    if(iqEl)iqEl.value=Number(f.iqValor).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }  atualizarTaxa();switchMain('simulador');switchTab('dados');
+  showToast('Dados carregados para simulação','success');
+}
+function editarFicha(){if(_fichaAtiva)carregarNaSimulacao(_fichaAtiva);}
+function editarFichaPorId(id){
+  var fichas=getFichas();
+  for(var i=0;i<fichas.length;i++){if(fichas[i].id===id){_fichaAtiva=fichas[i];carregarNaSimulacao(fichas[i]);return;}}
+}
+
+// ── EXCLUIR ───────────────────────────────────────────────────────────────────
+var _idParaExcluir=null;
+function pedirExclusao(id){_idParaExcluir=id;document.getElementById('modal-excluir').style.display='flex';}
+function confirmarExclusao(){if(_fichaAtiva)pedirExclusao(_fichaAtiva.id);}
+function fecharModal(){document.getElementById('modal-excluir').style.display='none';_idParaExcluir=null;}
+function excluirFichaConfirmado(){
+  if(!_idParaExcluir)return;
+  saveFichas(getFichas().filter(function(f){return f.id!==_idParaExcluir;}));
+  fecharModal();renderSidebar();renderFichasSection();
+  if(_fichaAtiva&&_fichaAtiva.id===_idParaExcluir){switchMain('simulador');_fichaAtiva=null;}
+  showToast('Ficha excluída.','');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+if(localStorage.getItem('mf_logado')==='1'){
+  renderSidebar();renderFichasSection();atualizarPillIA();
+}
+
+
+</script>

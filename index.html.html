@@ -706,18 +706,18 @@ hr{border:none;border-top:1px solid var(--border);margin:1.5rem 0}
   <div style="max-width:560px;margin:0 auto;padding:2rem 0">
     <div style="margin-bottom:2rem;text-align:center">
       <div style="font-size:28px;font-weight:700;color:var(--purple);margin-bottom:6px">Configurar IA</div>
-      <div style="color:var(--text3);font-size:13px">Conecte o Claude ao simulador para análise automática de perfil</div>
+      <div style="color:var(--text3);font-size:13px">Conecte o Groq (gratuito) ao simulador para análise automática de perfil</div>
     </div>
     <div class="settings-card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
         <div style="width:36px;height:36px;border-radius:10px;background:var(--purple-bg);border:0.5px solid var(--purple-border);display:flex;align-items:center;justify-content:center;font-size:18px">✦</div>
         <div>
-          <div style="font-weight:600;color:var(--text)">Chave de API da Anthropic</div>
-          <div style="font-size:11px;color:var(--text3)">Acesse console.anthropic.com → API Keys → Create Key</div>
+          <div style="font-weight:600;color:var(--text)">Chave de API da Groq</div>
+          <div style="font-size:11px;color:var(--text3)">Acesse console.groq.com → API Keys → Create Key</div>
         </div>
       </div>
       <div style="display:flex;gap:8px">
-        <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." style="flex:1;padding:10px 12px;background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:13px;outline:none;transition:border-color 0.15s" onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+        <input type="password" id="apiKeyInput" placeholder="gsk_..." style="flex:1;padding:10px 12px;background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:13px;outline:none;transition:border-color 0.15s" onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
         <button onclick="salvarApiKey()" style="padding:10px 18px;background:var(--purple);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap">Salvar</button>
       </div>
       <div id="key-display" style="display:none;margin-top:10px;padding:8px 12px;background:var(--surface2);border:0.5px solid var(--border);border-radius:var(--radius)">
@@ -737,12 +737,12 @@ hr{border:none;border-top:1px solid var(--border);margin:1.5rem 0}
     <div class="settings-card" style="margin-top:1rem">
       <div style="font-weight:600;color:var(--text);margin-bottom:8px">Como funciona</div>
       <div style="font-size:13px;color:var(--text2);line-height:1.6">
-        Após simular, clique em <strong style="color:var(--purple)">Gerar análise com IA</strong> para receber:<br>
+        Após simular, clique em <strong style="color:var(--purple)">Gerar analise com IA</strong> para receber:<br>
         <span style="color:var(--text3)">• <strong style="color:var(--text2)">Parecer interno</strong> — análise técnica para o consultor</span><br>
         <span style="color:var(--text3)">• <strong style="color:var(--text2)">Devolutiva ao cliente</strong> — texto pronto para WhatsApp ou e-mail</span>
       </div>
       <div style="margin-top:12px;padding:8px 12px;background:var(--surface2);border-radius:var(--radius);font-size:11px;color:var(--text3)">
-        Custo estimado: ~R$ 0,03 por análise · Modelo: Claude Sonnet
+        100% gratuito · Modelo: LLaMA 3.3 70B · 14.400 análises/dia
       </div>
     </div>
   </div>
@@ -1548,57 +1548,65 @@ async function gerarAnaliseIA(){
   if(!d){showToast('Simule primeiro.','');return;}
   var apiKey=getApiKey();
   if(!apiKey){
-    showToast('Configure a chave Anthropic em Configurar IA','error');
+    showToast('Configure a chave Groq em Configurar IA','error');
     switchMain('config');
     return;
   }
   var btn=document.getElementById('btn-gerar-ia');
   var container=document.getElementById('ai-analysis-container');
   btn.disabled=true;btn.textContent='Analisando...';
-  container.innerHTML='<div class="ai-block"><div class="ai-block-header"><div class="ai-icon">&#10022;</div><div><div class="ai-block-title">Analise em andamento</div><div class="ai-block-sub">Claude lendo o perfil...</div></div></div><div class="ai-loading"><div class="ai-dots"><span></span><span></span><span></span></div><span>Gerando parecer e devolutiva...</span></div></div>';
+  container.innerHTML='<div class="ai-block"><div class="ai-block-header"><div class="ai-icon">&#10022;</div><div><div class="ai-block-title">Analise em andamento</div><div class="ai-block-sub">Groq IA lendo o perfil...</div></div></div><div class="ai-loading"><div class="ai-dots"><span></span><span></span><span></span></div><span>Gerando parecer e devolutiva...</span></div></div>';
   var aprovStr=(r.aprovados||[]).map(function(a){return a.b.nome+' '+a.b.taxa+'%am parc:'+brl(a.parcelaB);}).join('; ')||'nenhum';
   var reprStr=(r.reprovados||[]).map(function(rp){return rp.b.nome+': '+rp.motivos.join(', ');}).join('; ')||'nenhum';
   var nl='\n';
-  var prompt='Voce e especialista senior em credito imobiliario brasileiro, home equity.'+nl
-    +'Analise o perfil e retorne SOMENTE um JSON valido com as chaves parecer_interno e devolutiva_cliente. Sem markdown, sem texto fora do JSON.'+nl
+  var sysMsg='Voce e especialista senior em credito imobiliario brasileiro, home equity. Responda SEMPRE em JSON valido com as chaves parecer_interno e devolutiva_cliente. Sem markdown, sem texto fora do JSON.';
+  var userMsg='Analise o perfil e retorne JSON.'+nl
     +'PERFIL: '+(d.nome||'NI')+' | '+(d.ocupacao||'NI')+' | Renda: '+brl(d.renda||0)+'/mes | EC: '+(d.estadoCivil||'NI')+nl
     +'IMOVEL: tipo='+(d.tipoIm||'NI')+' valor='+brl(d.valorImovel||0)+' LTV='+pct(r.ltv||0,1)+nl
     +'CREDITO: '+brl(d.valorCredito||0)+' total='+brl(r.totalFin||0)+' taxa='+pct(r.taxa||0,2)+'am prazo='+(d.prazo||0)+'m'+nl
     +'PRICE: parcela='+brl(r.parcelaPrice||0)+' comp='+pct(r.compPrice||0,1)+' '+(r.rendaOkPrice&&r.ltvOk?'ELEGIVEL':'REPROVADO')+nl
     +'SAC: parcela='+brl(r.sac1Val||0)+' comp='+pct(r.compSAC||0,1)+' '+(r.rendaOkSAC&&r.ltvOk?'ELEGIVEL':'REPROVADO')+nl
     +'APROVADOS: '+aprovStr+nl
-    +'REPROVADOS: '+reprStr;
+    +'REPROVADOS: '+reprStr+nl
+    +'parecer_interno: analise tecnica detalhada para o consultor (banco recomendado, docs, riscos, estrategia).'+nl
+    +'devolutiva_cliente: texto amigavel para WhatsApp ou email ao cliente, sem jargoes tecnicos.';
   try{
-    var resp=await fetch('https://api.anthropic.com/v1/messages',{
+    var resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{
         'Content-Type':'application/json',
-        'x-api-key':apiKey,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
+        'Authorization':'Bearer '+apiKey
       },
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1200,
-        messages:[{role:'user',content:prompt}]
+        model:'llama-3.3-70b-versatile',
+        max_tokens:1500,
+        temperature:0.4,
+        response_format:{type:'json_object'},
+        messages:[
+          {role:'system',content:sysMsg},
+          {role:'user',content:userMsg}
+        ]
       })
     });
-    if(!resp.ok){var err=await resp.json();throw new Error((err.error&&err.error.message)||'Erro '+resp.status);}
+    if(!resp.ok){
+      var err=await resp.json();
+      var msg=(err.error&&err.error.message)||'Erro '+resp.status;
+      throw new Error(msg);
+    }
     var data=await resp.json();
-    var raw=data.content.map(function(i){return i.text||'';}).join('');
-    var clean=raw.replace(/```json/g,'').replace(/```/g,'').trim();
+    var content=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content||'{}';
     var parsed=null;
-    try{parsed=JSON.parse(clean);}
+    try{parsed=JSON.parse(content);}
     catch(e1){
-      var i1=clean.indexOf('"parecer_interno"');
-      var i2=clean.indexOf('"devolutiva_cliente"');
+      var i1=content.indexOf('"parecer_interno"');
+      var i2=content.indexOf('"devolutiva_cliente"');
       if(i1>=0&&i2>=0){
         parsed={
-          parecer_interno:clean.substring(i1+20,i2-3).replace(/^"|"$/g,''),
-          devolutiva_cliente:clean.substring(i2+22).replace(/["}]+$/g,'').replace(/^"/,'')
+          parecer_interno:content.substring(i1+20,i2-3).replace(/^"|"$/g,''),
+          devolutiva_cliente:content.substring(i2+22).replace(/["}]+$/g,'').replace(/^"/,'')
         };
       } else {
-        parsed={parecer_interno:raw,devolutiva_cliente:'Clique em Regenerar para tentar novamente.'};
+        parsed={parecer_interno:content,devolutiva_cliente:'Clique em Regenerar para tentar novamente.'};
       }
     }
     renderAIBlock(parsed,d,r);
@@ -1918,38 +1926,35 @@ async function testarChave(){
   var stat=document.getElementById('key-status-dot');
   var stxt=document.getElementById('key-status-text');
   var credMsg=document.getElementById('key-credit-msg');
-  btn.textContent='Testando...';btn.style.pointerEvents='none';
+  if(btn){btn.textContent='Testando...';btn.style.pointerEvents='none';}
   try{
-    var resp=await fetch('https://api.anthropic.com/v1/messages',{
+    var resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:10,messages:[{role:'user',content:'ok'}]})
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},
+      body:JSON.stringify({
+        model:'llama-3.3-70b-versatile',max_tokens:5,
+        messages:[{role:'user',content:'ok'}]
+      })
     });
     if(resp.ok){
       if(stat)stat.style.background='var(--green)';
-      if(stxt)stxt.textContent='Chave ativa e com crédito ✓';
+      if(stxt)stxt.textContent='Chave Groq ativa ✓ — 100% gratuita';
       if(credMsg)credMsg.style.display='none';
       atualizarBadgeIA(true,'');
-      showToast('Conexão com Claude confirmada!','success');
+      showToast('Groq conectado com sucesso!','success');
     } else {
       var err=await resp.json();
       var msg=(err.error&&err.error.message)||'Erro '+resp.status;
-      var semCredito=msg.toLowerCase().indexOf('credit')>=0||resp.status===529||resp.status===402;
       if(stat)stat.style.background='var(--red)';
-      if(stxt)stxt.textContent=semCredito?'Sem crédito disponível':'Chave inválida ou expirada';
-      if(credMsg){
-        credMsg.style.display='block';
-        credMsg.textContent=semCredito
-          ?'Sua conta Anthropic não tem crédito. Acesse console.anthropic.com → Billing para adicionar.'
-          :'Erro: '+msg;
-      }
-      atualizarBadgeIA(false, semCredito?'sem credito':'');
+      if(stxt)stxt.textContent='Erro: '+msg;
+      if(credMsg){credMsg.style.display='block';credMsg.textContent='Verifique a chave em console.groq.com → API Keys';}
+      atualizarBadgeIA(false,'erro');
     }
   } catch(e){
-    if(stxt)stxt.textContent='Erro de conexão: '+e.message;
+    if(stxt)stxt.textContent='Erro de conexao: '+e.message;
     atualizarBadgeIA(false,'');
   }
-  btn.textContent='Testar conexão';btn.style.pointerEvents='auto';
+  if(btn){btn.textContent='Testar conexao';btn.style.pointerEvents='auto';}
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────

@@ -927,6 +927,21 @@ function getFichas(){try{return JSON.parse(localStorage.getItem('mf_fichas')||'[
 function saveFichas(f){localStorage.setItem('mf_fichas',JSON.stringify(f));}
 function gerarId(){return 'fc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);}
 function getApiKey(){return localStorage.getItem('mf_anthropic_key')||'';}
+function salvarApiKey(){
+  var v=document.getElementById('apiKeyInput').value.trim();
+  if(!v||v.indexOf('gsk_')!==0){showToast('Chave invalida. Deve comecar com gsk_...','error');return;}
+  localStorage.setItem('mf_anthropic_key',v);
+  document.getElementById('apiKeyInput').value='';
+  renderKeyStatus();
+  showToast('Chave Groq salva!','success');
+  setTimeout(testarChave,500);
+}
+function limparApiKey(){
+  localStorage.removeItem('mf_anthropic_key');
+  renderKeyStatus();
+  showToast('Chave removida.','');
+}
+
 function renderKeyStatus(){
   var k=getApiKey();
   var disp=document.getElementById('key-display');

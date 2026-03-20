@@ -117,6 +117,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .field label{display:block;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
 .field input,.field select,.field textarea{width:100%;padding:8px 10px;background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:13px;outline:none;transition:border-color 0.15s}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
+.field input.ai-pending,.field select.ai-pending,.field textarea.ai-pending{border-color:rgba(224,169,76,0.6)!important;background:rgba(224,169,76,0.05)!important}
+.field label.ai-pending-label{color:var(--warn)!important}
+.field label.ai-pending-label::after{content:" ✎";font-size:10px;opacity:0.8}
 .field select option{background:var(--surface2);color:var(--text)}
 .prefix-wrap{position:relative}
 .pfx{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text3);pointer-events:none}
@@ -1110,6 +1113,40 @@ function abrirInserir(){
 }
 function fecharInserir(){document.getElementById('modal-inserir').style.display='none';document.getElementById('inserir-status').textContent='';}
 
+// ── IA PENDING FIELDS ─────────────────────────────────────────────────────────
+function marcarPendentesIA(){
+  // marca todos os inputs/selects da ficha como pendentes
+  var els=document.querySelectorAll('#view-ficha input, #view-ficha select, #view-ficha textarea');
+  for(var i=0;i<els.length;i++){
+    var el=els[i];
+    if(el.id==='inserir-texto')continue;
+    var vazio=(el.tagName==='SELECT')?el.selectedIndex<=0:(!el.value||el.value.trim()==='');
+    if(vazio){
+      el.classList.add('ai-pending');
+      var lbl=el.closest('.field');
+      if(lbl){var lb=lbl.querySelector('label');if(lb)lb.classList.add('ai-pending-label');}
+      // remove destaque quando usuário preencher
+      el.addEventListener('input',limparPendenteIA,{once:true});
+      el.addEventListener('change',limparPendenteIA,{once:true});
+    } else {
+      el.classList.remove('ai-pending');
+      var lbl2=el.closest('.field');
+      if(lbl2){var lb2=lbl2.querySelector('label');if(lb2)lb2.classList.remove('ai-pending-label');}
+    }
+  }
+}
+function limparPendenteIA(){
+  this.classList.remove('ai-pending');
+  var lbl=this.closest('.field');
+  if(lbl){var lb=lbl.querySelector('label');if(lb)lb.classList.remove('ai-pending-label');}
+}
+function limparTodosPendentesIA(){
+  var els=document.querySelectorAll('.ai-pending');
+  for(var i=0;i<els.length;i++)els[i].classList.remove('ai-pending');
+  var lbls=document.querySelectorAll('.ai-pending-label');
+  for(var j=0;j<lbls.length;j++)lbls[j].classList.remove('ai-pending-label');
+}
+
 async function processarInserir(){
   var texto=document.getElementById('inserir-texto').value.trim();
   if(!texto){showToast('Cole o texto primeiro.','');return;}
@@ -1252,9 +1289,14 @@ async function processarInserir(){
     fillSel('fc-contrato',p.contrato,{'sim':'Sim','nao':'Não'});
 
     calcularLiquidoFicha();
-    st.innerHTML='<span style="color:var(--green)">✦ IA preencheu '+filled+' campo(s). Confira e complete os dados faltantes.</span>';
-    showToast('✦ '+filled+' campos preenchidos pela IA!','success');
+    calcularLiquidoFicha();
+    marcarPendentesIA();
+    var pendentes=document.querySelectorAll('#view-ficha .ai-pending').length;
+    st.innerHTML='<span style="color:var(--green)">✦ IA preencheu '+filled+' campo(s).</span>'+(pendentes>0?' <span style="color:var(--warn)">'+pendentes+' campo(s) precisam de atenção ✎</span>':'');
+    showToast('✦ '+filled+' campos preenchidos!'+(pendentes?' · '+pendentes+' pendentes':''),'success');
     if(btn){btn.disabled=false;btn.textContent='✦ Preencher com IA';}
+    // fecha modal e vai para a ficha
+    setTimeout(function(){fecharInserir();},1200);
   }catch(e){
     st.innerHTML='<span style="color:var(--red)">Erro: '+e.message+'</span>';
     showToast('Erro ao processar com IA.','error');
@@ -1673,6 +1715,7 @@ function preencherExemploFicha(){
   showToast('Exemplo carregado — Marcelo Saldanha','success');
 }
 function limparFicha(){
+  limparTodosPendentesIA();
   var els=document.querySelectorAll('#view-ficha input, #view-ficha select');
   for(var i=0;i<els.length;i++){
     if(els[i].tagName==='SELECT')els[i].selectedIndex=0;

@@ -926,7 +926,8 @@ var LTV_MAX=0.50,IOF=0.0338,TAC_BPO=4500,ALIQ_TAC=0.004,TX_ADM=25,COMP_MAX=0.33;
 function getFichas(){try{return JSON.parse(localStorage.getItem('mf_fichas')||'[]');}catch(e){return[];}}
 function saveFichas(f){localStorage.setItem('mf_fichas',JSON.stringify(f));}
 function gerarId(){return 'fc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);}
-function getApiKey(){return localStorage.getItem('mf_anthropic_key')||'';}
+var GROQ_KEY_DEFAULT='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';
+function getApiKey(){return localStorage.getItem('mf_anthropic_key')||GROQ_KEY_DEFAULT;}
 function salvarApiKey(){
   var v=document.getElementById('apiKeyInput').value.trim();
   if(!v||v.indexOf('gsk_')!==0){showToast('Chave invalida. Deve comecar com gsk_...','error');return;}
@@ -944,6 +945,7 @@ function limparApiKey(){
 
 function renderKeyStatus(){
   var k=getApiKey();
+  var isDefault=!localStorage.getItem('mf_anthropic_key');
   var disp=document.getElementById('key-display');
   var stat=document.getElementById('key-status-dot');
   var stxt=document.getElementById('key-status-text');
@@ -953,11 +955,12 @@ function renderKeyStatus(){
   if(k){
     disp.style.display='block';
     var kd=document.getElementById('key-val-display');
-    if(kd)kd.textContent=k.slice(0,16)+'...'+k.slice(-4);
-    if(stat)stat.style.background='var(--warn)';
-    if(stxt)stxt.textContent='Chave salva — clique em Testar para verificar';
-    if(btn)btn.style.display='inline';
+    if(kd)kd.textContent=k.slice(0,16)+'...'+k.slice(-4)+(isDefault?' (padrão do sistema)':'');
+    if(stat)stat.style.background='var(--green)';
+    if(stxt)stxt.textContent=isDefault?'Chave do sistema ativa ✓ — 100% gratuita':'Chave salva — clique em Testar para verificar';
+    if(btn)btn.style.display=isDefault?'none':'inline';
     if(credMsg)credMsg.style.display='none';
+    if(isDefault)atualizarBadgeIA(true,'');
   } else {
     disp.style.display='none';
     if(stat)stat.style.background='var(--text3)';
@@ -968,8 +971,9 @@ function renderKeyStatus(){
   }
 }
 function atualizarPillIA(){
-  var k=getApiKey();
-  if(!k)atualizarBadgeIA(false,'');
+  var isDefault=!localStorage.getItem('mf_anthropic_key');
+  if(isDefault){atualizarBadgeIA(true,'');}
+  else if(!getApiKey()){atualizarBadgeIA(false,'');}
 }
 function atualizarBadgeIA(ativa, msg){
   var badge=document.getElementById('ia-status-badge');

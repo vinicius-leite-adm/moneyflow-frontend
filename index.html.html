@@ -1624,6 +1624,9 @@ async function gerarAnaliseIA(){
         parsed={parecer_interno:content,devolutiva_cliente:'Clique em Regenerar para tentar novamente.'};
       }
     }
+    // Garantir que os campos sejam strings
+    if(parsed && typeof parsed.parecer_interno !== 'string') parsed.parecer_interno = String(parsed.parecer_interno||'');
+    if(parsed && typeof parsed.devolutiva_cliente !== 'string') parsed.devolutiva_cliente = String(parsed.devolutiva_cliente||'');
     renderAIBlock(parsed,d,r);
     btn.textContent='Regenerar analise';btn.disabled=false;
   } catch(e){
@@ -1637,6 +1640,8 @@ function renderAIBlock(parsed,d,r){
   var aprovado=(r.rendaOkPrice||r.rendaOkSAC)&&r.ltvOk;
   function fmtP(txt){
     if(!txt)return '';
+    // Ensure txt is a string (Groq may return objects in some cases)
+    if(typeof txt !== 'string') txt = JSON.stringify(txt);
     var lines=txt.split('\n'),out='';
     for(var i=0;i<lines.length;i++){
       var l=lines[i];if(!l.trim())continue;

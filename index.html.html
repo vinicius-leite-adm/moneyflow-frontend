@@ -1574,28 +1574,29 @@ async function gerarAnaliseIA(){
   var aprovStr=(r.aprovados||[]).map(function(a){return a.b.nome+' '+a.b.taxa+'%am parc:'+brl(a.parcelaB);}).join('; ')||'nenhum';
   var reprStr=(r.reprovados||[]).map(function(rp){return rp.b.nome+': '+rp.motivos.join(', ');}).join('; ')||'nenhum';
   var nl='\n';
-  var sysMsg='Voce e especialista senior em credito imobiliario brasileiro, home equity. Responda SEMPRE em JSON valido com as chaves parecer_interno e devolutiva_cliente. Sem markdown, sem texto fora do JSON.';
-  var userMsg='Analise o perfil e retorne JSON.'+nl
-    +'PERFIL: '+(d.nome||'NI')+' | '+(d.ocupacao||'NI')+' | Renda: '+brl(d.renda||0)+'/mes | EC: '+(d.estadoCivil||'NI')+nl
-    +'IMOVEL: tipo='+(d.tipoIm||'NI')+' valor='+brl(d.valorImovel||0)+' LTV='+pct(r.ltv||0,1)+nl
-    +'CREDITO: '+brl(d.valorCredito||0)+' total='+brl(r.totalFin||0)+' taxa='+pct(r.taxa||0,2)+'am prazo='+(d.prazo||0)+'m'+nl
-    +'PRICE: parcela='+brl(r.parcelaPrice||0)+' comp='+pct(r.compPrice||0,1)+' '+(r.rendaOkPrice&&r.ltvOk?'ELEGIVEL':'REPROVADO')+nl
-    +'SAC: parcela='+brl(r.sac1Val||0)+' comp='+pct(r.compSAC||0,1)+' '+(r.rendaOkSAC&&r.ltvOk?'ELEGIVEL':'REPROVADO')+nl
-    +'APROVADOS: '+aprovStr+nl
-    +'REPROVADOS: '+reprStr+nl
-    +'parecer_interno: analise tecnica detalhada para o consultor (banco recomendado, docs, riscos, estrategia).'+nl
-    +'devolutiva_cliente: texto amigavel para WhatsApp ou email ao cliente, sem jargoes tecnicos.';
+  var sysMsg='Voce e especialista em credito imobiliario brasileiro. '
+    +'Retorne EXATAMENTE este JSON, sem mais nada, sem markdown:\n'
+    +'{"parecer_interno":"TEXTO CORRIDO aqui, sem sub-objetos, sem listas aninhadas","devolutiva_cliente":"TEXTO CORRIDO aqui"}\n'
+    +'IMPORTANTE: os valores devem ser STRINGS de texto corrido, nunca objetos ou arrays.';
+  var userMsg='Perfil para analise:'+nl
+    +'Cliente: '+(d.nome||'NI')+' | Ocupacao: '+(d.ocupacao||'NI')+' | Renda: '+brl(d.renda||0)+'/mes | EC: '+(d.estadoCivil||'NI')+nl
+    +'Imovel: tipo='+(d.tipoIm||'NI')+' valor='+brl(d.valorImovel||0)+' LTV='+pct(r.ltv||0,1)+nl
+    +'Credito: '+brl(d.valorCredito||0)+' total='+brl(r.totalFin||0)+' taxa='+pct(r.taxa||0,2)+'am prazo='+(d.prazo||0)+'m'+nl
+    +'PRICE: '+brl(r.parcelaPrice||0)+' comp='+pct(r.compPrice||0,1)+' '+(r.rendaOkPrice&&r.ltvOk?'ELEGIVEL':'REPROVADO')+nl
+    +'SAC: '+brl(r.sac1Val||0)+' comp='+pct(r.compSAC||0,1)+' '+(r.rendaOkSAC&&r.ltvOk?'ELEGIVEL':'REPROVADO')+nl
+    +'Bancos aprovados: '+aprovStr+nl
+    +'Bancos reprovados: '+reprStr+nl+nl
+    +'Escreva o parecer_interno como um paragrafo de texto continuo para o consultor: '
+    +'banco recomendado e por que, documentos necessarios, riscos e estrategia.'+nl
+    +'Escreva a devolutiva_cliente como texto de WhatsApp ou email amigavel ao cliente, sem jargoes tecnicos.';
   try{
     var resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'Authorization':'Bearer '+apiKey
-      },
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
       body:JSON.stringify({
         model:'llama-3.3-70b-versatile',
         max_tokens:1500,
-        temperature:0.4,
+        temperature:0.3,
         response_format:{type:'json_object'},
         messages:[
           {role:'system',content:sysMsg},
@@ -1605,28 +1606,32 @@ async function gerarAnaliseIA(){
     });
     if(!resp.ok){
       var err=await resp.json();
-      var msg=(err.error&&err.error.message)||'Erro '+resp.status;
-      throw new Error(msg);
+      throw new Error((err.error&&err.error.message)||'Erro '+resp.status);
     }
     var data=await resp.json();
     var content=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content||'{}';
     var parsed=null;
     try{parsed=JSON.parse(content);}
-    catch(e1){
-      var i1=content.indexOf('"parecer_interno"');
-      var i2=content.indexOf('"devolutiva_cliente"');
-      if(i1>=0&&i2>=0){
-        parsed={
-          parecer_interno:content.substring(i1+20,i2-3).replace(/^"|"$/g,''),
-          devolutiva_cliente:content.substring(i2+22).replace(/["}]+$/g,'').replace(/^"/,'')
-        };
-      } else {
-        parsed={parecer_interno:content,devolutiva_cliente:'Clique em Regenerar para tentar novamente.'};
+    catch(e1){parsed={parecer_interno:content,devolutiva_cliente:'Clique em Regenerar para tentar novamente.'};}
+    // Flatten: if fields are objects, stringify them
+    function toStr(v){
+      if(!v)return '';
+      if(typeof v==='string')return v;
+      if(typeof v==='object'){
+        // Try to join values of the object as readable text
+        var parts=[];
+        Object.keys(v).forEach(function(k){
+          var val=v[k];
+          if(typeof val==='string')parts.push(val);
+          else if(Array.isArray(val))parts.push(val.join('. '));
+          else parts.push(String(val));
+        });
+        return parts.join('\n\n');
       }
+      return String(v);
     }
-    // Garantir que os campos sejam strings
-    if(parsed && typeof parsed.parecer_interno !== 'string') parsed.parecer_interno = String(parsed.parecer_interno||'');
-    if(parsed && typeof parsed.devolutiva_cliente !== 'string') parsed.devolutiva_cliente = String(parsed.devolutiva_cliente||'');
+    parsed.parecer_interno=toStr(parsed.parecer_interno);
+    parsed.devolutiva_cliente=toStr(parsed.devolutiva_cliente);
     renderAIBlock(parsed,d,r);
     btn.textContent='Regenerar analise';btn.disabled=false;
   } catch(e){

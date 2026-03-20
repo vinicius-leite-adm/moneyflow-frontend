@@ -580,11 +580,11 @@ hr{border:none;border-top:1px solid var(--border);margin:1.5rem 0}
   <div id="modal-inserir" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center;padding:1rem">
     <div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-xl);padding:1.75rem;max-width:580px;width:100%;box-shadow:0 8px 40px var(--shadow)">
       <div style="font-family:var(--font-display);font-size:20px;margin-bottom:4px;color:var(--text)">📥 Inserir ficha do cliente</div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:1rem;line-height:1.6">Cole abaixo o texto da ficha recebida (e-mail, WhatsApp ou sistema). O preenchimento é automático e não precisa de IA.</div>
-      <textarea id="inserir-texto" style="width:100%;height:200px;background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:12px;padding:10px;outline:none;resize:vertical;line-height:1.6" placeholder="Cole aqui o texto completo da ficha...&#10;&#10;Exemplo:&#10;Nome do Solicitante: João da Silva&#10;CPF: 123.456.789-00&#10;Telefone: (11) 99999-0000&#10;..."></textarea>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:1rem;line-height:1.6">Cole qualquer texto com dados do cliente — e-mail, WhatsApp, anotação livre, formulário. A IA identifica e preenche os campos automaticamente.</div>
+      <textarea id="inserir-texto" style="width:100%;height:200px;background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:12px;padding:10px;outline:none;resize:vertical;line-height:1.6" placeholder="Cole qualquer texto aqui — não precisa seguir um modelo.&#10;&#10;Exemplos aceitos:&#10;• WhatsApp: &quot;Oi, sou João, tenho um apto em SP avaliado em 500k, quero 200k de crédito...&quot;&#10;• E-mail: &quot;Segue dados: Maria Silva, CPF 123.456.789-00, dentista, imóvel avaliado em R$ 800.000...&quot;&#10;• Qualquer formato livre"></textarea>
       <div style="display:flex;gap:8px;margin-top:1rem;justify-content:flex-end">
         <button class="btn btn-ghost" onclick="fecharInserir()">Cancelar</button>
-        <button class="btn btn-primary" onclick="processarInserir()">⚡ Preencher automaticamente</button>
+        <button class="btn btn-ai" id="btn-inserir-ia" onclick="processarInserir()">✦ Preencher com IA</button>
       </div>
       <div id="inserir-status" style="margin-top:8px;font-size:12px;color:var(--text3)"></div>
     </div>
@@ -1110,213 +1110,156 @@ function abrirInserir(){
 }
 function fecharInserir(){document.getElementById('modal-inserir').style.display='none';document.getElementById('inserir-status').textContent='';}
 
-function processarInserir(){
+async function processarInserir(){
   var texto=document.getElementById('inserir-texto').value.trim();
-  if(!texto){showToast('Cole o texto da ficha primeiro.','');return;}
+  if(!texto){showToast('Cole o texto primeiro.','');return;}
   var st=document.getElementById('inserir-status');
-  var filled=0;
+  var btn=document.getElementById('btn-inserir-ia');
+  var apiKey=getApiKey();
+  if(!apiKey){showToast('Chave IA não configurada.','error');return;}
 
-  // ── extrai valor de um campo pelo rótulo ──────────────────────────────────
-  function get(labels){
-    var arr=Array.isArray(labels)?labels:[labels];
-    for(var li=0;li<arr.length;li++){
-      var rx=new RegExp(arr[li]+'\\s*[:\\-]\\s*(.+)','i');
-      var m=texto.match(rx);
-      if(m){var v=m[1].trim().replace(/\r/g,'');if(v&&v!=='-'&&v.toLowerCase()!=='não informado')return v;}
+  st.innerHTML='<span style="color:var(--purple)">✦ IA lendo o texto...</span>';
+  if(btn){btn.disabled=true;btn.textContent='Analisando...';}
+
+  var prompt='Voce e um assistente especializado em extrair dados de clientes para solicitacoes de home equity (credito com garantia de imovel) no Brasil.\n'
+    +'Leia o texto abaixo e extraia os dados do cliente. Retorne SOMENTE um objeto JSON valido, sem markdown, sem explicacoes, sem texto antes ou depois.\n\n'
+    +'Campos esperados (use null para campos nao encontrados):\n'
+    +'{\n'
+    +'  "nome": string,\n'
+    +'  "cpf": string,\n'
+    +'  "telefone": string,\n'
+    +'  "email": string,\n'
+    +'  "profissao": string,\n'
+    +'  "nacionalidade": string,\n'
+    +'  "naturalidade": string (cidade/UF),\n'
+    +'  "nascimento": string (formato YYYY-MM-DD),\n'
+    +'  "estadoCivil": string (opcoes: "Casado(a)", "Solteiro(a)", "Divorciado(a)", "Viuvo(a)", "Uniao Estavel"),\n'
+    +'  "conjNome": string,\n'
+    +'  "conjCpf": string,\n'
+    +'  "conjNasc": string (YYYY-MM-DD),\n'
+    +'  "conjNat": string,\n'
+    +'  "conjEmail": string,\n'
+    +'  "cep": string,\n'
+    +'  "logradouro": string,\n'
+    +'  "numero": string,\n'
+    +'  "bairro": string,\n'
+    +'  "cidade": string,\n'
+    +'  "uf": string (sigla 2 letras),\n'
+    +'  "classImovel": string (opcoes: "Residencial", "Comercial"),\n'
+    +'  "tipoImovel": string (opcoes: "Apartamento", "Casa em Condominio", "Casa fora de Condominio", "Sala Comercial", "Loja", "Galpao", "Terreno"),\n'
+    +'  "regularizacao": string (opcoes: "Totalmente regularizado com matricula em cartorio", "Parcialmente regularizado", "Nao regularizado"),\n'
+    +'  "vlImovel": number (valor numerico em reais, sem formatacao),\n'
+    +'  "vlCredito": number,\n'
+    +'  "parcelas": number (opcoes: 60, 120, 180, 240),\n'
+    +'  "motivo": string,\n'
+    +'  "possuiIQ": string (opcoes: "sim", "nao"),\n'
+    +'  "iqValor": number,\n'
+    +'  "ocupacao": string (opcoes: "Autonomo / Profissional Liberal", "Assalariado (CLT)", "Empresario", "Servidor Publico", "Aposentado / Pensionista"),\n'
+    +'  "servicos": string,\n'
+    +'  "funcionarios": string,\n'
+    +'  "sede": string (opcoes: "Propria", "Alugada"),\n'
+    +'  "site": string,\n'
+    +'  "clientes": string,\n'
+    +'  "faturamento": number,\n'
+    +'  "custoFixo": number,\n'
+    +'  "emiteNF": string (opcoes: "Sim", "Nao"),\n'
+    +'  "contrato": string (opcoes: "Sim", "Nao")\n'
+    +'}\n\n'
+    +'TEXTO DO CLIENTE:\n'+texto;
+
+  try{
+    var resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+      body:JSON.stringify({
+        model:'llama-3.3-70b-versatile',
+        max_tokens:1500,
+        temperature:0.1,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    if(!resp.ok){var err=await resp.json();throw new Error((err.error&&err.error.message)||'Erro '+resp.status);}
+    var data=await resp.json();
+    var raw=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content||'';
+    // Remove markdown fences if present
+    raw=raw.replace(/```json|```/g,'').trim();
+    var p;
+    try{p=JSON.parse(raw);}catch(e){throw new Error('IA retornou formato inesperado. Tente novamente.');}
+
+    var filled=0;
+    function fill(id,val){if(val==null||val===''||val==='null')return;var el=document.getElementById(id);if(el){el.value=val;filled++;}}
+    function fillMoney(id,val){if(!val||val<=0)return;var el=document.getElementById(id);if(el){el.value=Number(val).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});filled++;}}
+    function fillSel(id,val,map){
+      if(!val||val==='null')return;
+      var el=document.getElementById(id);if(!el)return;
+      var v=String(val).trim().toLowerCase();
+      if(map){for(var mk in map){if(v.indexOf(mk.toLowerCase())>=0){for(var oi=0;oi<el.options.length;oi++){if(el.options[oi].text===map[mk]||el.options[oi].value===map[mk]){el.selectedIndex=oi;filled++;return;}}}}}
+      for(var i=0;i<el.options.length;i++){if(el.options[i].text.toLowerCase()===v||el.options[i].value.toLowerCase()===v){el.selectedIndex=i;filled++;return;}}
+      for(var j=0;j<el.options.length;j++){if(el.options[j].text.toLowerCase().indexOf(v)>=0||v.indexOf(el.options[j].text.toLowerCase())>=0){el.selectedIndex=j;filled++;return;}}
     }
-    return null;
+
+    fill('fc-nome',     p.nome);
+    fill('fc-cpf',      p.cpf);
+    fill('fc-tel',      p.telefone);
+    fill('fc-email',    p.email);
+    fill('fc-prof',     p.profissao);
+    fill('fc-nac',      p.nacionalidade);
+    fill('fc-nat',      p.naturalidade);
+    if(p.nascimento&&p.nascimento!=='null'){var el=document.getElementById('fc-nasc');if(el){el.value=p.nascimento;filled++;}}
+    fillSel('fc-ec', p.estadoCivil,{'casado':'Casado(a)','solteiro':'Solteiro(a)','divorciado':'Divorciado(a)','viuvo':'Viúvo(a)','uniao':'União Estável'});
+    fill('fc-cnjNome',  p.conjNome);
+    fill('fc-cnjCpf',   p.conjCpf);
+    if(p.conjNasc&&p.conjNasc!=='null'){var el2=document.getElementById('fc-cnjNasc');if(el2){el2.value=p.conjNasc;filled++;}}
+    fill('fc-cnjNat',   p.conjNat);
+    fill('fc-cnjEmail', p.conjEmail);
+    fill('fc-cepIm',    p.cep);
+    fill('fc-logradouro',p.logradouro);
+    fill('fc-num',      p.numero);
+    fill('fc-bairro',   p.bairro);
+    fill('fc-cidadeIm', p.cidade);
+    fill('fc-ufIm',     p.uf);
+    fillSel('fc-classIm', p.classImovel,{'residencial':'Residencial','comercial':'Comercial'});
+    fillSel('fc-tipoIm', p.tipoImovel,{
+      'apartamento':'Apartamento','casa em condominio':'Casa em Condomínio','casa em condomínio':'Casa em Condomínio',
+      'casa fora':'Casa fora de Condomínio','sala comercial':'Sala Comercial','loja':'Loja',
+      'galpao':'Galpão','galpão':'Galpão','terreno':'Terreno'
+    });
+    fillSel('fc-reg', p.regularizacao,{
+      'totalmente':'Totalmente regularizado com matrícula em cartório',
+      'parcialmente':'Parcialmente regularizado','nao regularizado':'Não regularizado'
+    });
+    fillMoney('fc-vlIm',   p.vlImovel);
+    fillMoney('fc-vlCred', p.vlCredito);
+    fill('fc-motivo',      p.motivo);
+    if(p.parcelas){var ps=document.getElementById('fc-parcelas');if(ps){for(var pi=0;pi<ps.options.length;pi++){if(parseInt(ps.options[pi].value)===parseInt(p.parcelas)){ps.selectedIndex=pi;filled++;break;}}}}
+    var iqSel=document.getElementById('fc-iq');
+    if(iqSel&&p.possuiIQ&&p.possuiIQ!=='null'){iqSel.value=(p.possuiIQ==='sim')?'sim':'nao';toggleFcIQ();filled++;}
+    if(p.possuiIQ==='sim')fillMoney('fc-iqValor', p.iqValor);
+    fillSel('fc-ocup', p.ocupacao,{
+      'autonomo':'Autônomo / Profissional Liberal','autônomo':'Autônomo / Profissional Liberal',
+      'clt':'Assalariado (CLT)','assalariado':'Assalariado (CLT)',
+      'empresario':'Empresário','empresário':'Empresário',
+      'servidor':'Servidor Público','aposentado':'Aposentado / Pensionista'
+    });
+    fill('fc-serv',    p.servicos);
+    fill('fc-func',    p.funcionarios);
+    fillSel('fc-sede', p.sede,{'propria':'Própria','própria':'Própria','alugada':'Alugada'});
+    fill('fc-site',    p.site);
+    fill('fc-clientes',p.clientes);
+    fillMoney('fc-fat',  p.faturamento);
+    fillMoney('fc-custo',p.custoFixo);
+    fillSel('fc-nf',  p.emiteNF,{'sim':'Sim','nao':'Não'});
+    fillSel('fc-contrato',p.contrato,{'sim':'Sim','nao':'Não'});
+
+    calcularLiquidoFicha();
+    st.innerHTML='<span style="color:var(--green)">✦ IA preencheu '+filled+' campo(s). Confira e complete os dados faltantes.</span>';
+    showToast('✦ '+filled+' campos preenchidos pela IA!','success');
+    if(btn){btn.disabled=false;btn.textContent='✦ Preencher com IA';}
+  }catch(e){
+    st.innerHTML='<span style="color:var(--red)">Erro: '+e.message+'</span>';
+    showToast('Erro ao processar com IA.','error');
+    if(btn){btn.disabled=false;btn.textContent='✦ Preencher com IA';}
   }
-
-  // ── converte data DD/MM/AAAA → YYYY-MM-DD ─────────────────────────────────
-  function toISO(s){
-    if(!s)return null;
-    var m=s.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-    return m?m[3]+'-'+m[2]+'-'+m[1]:null;
-  }
-
-  // ── extrai número de string R$ ─────────────────────────────────────────────
-  function toNum(s){
-    if(!s)return null;
-    var n=parseFloat(s.replace(/[R$\s.]/g,'').replace(',','.'));
-    return isNaN(n)?null:n;
-  }
-
-  // ── seta campo texto ───────────────────────────────────────────────────────
-  function fill(id,val){
-    if(val==null||val==='')return;
-    var el=document.getElementById(id);
-    if(el){el.value=val;filled++;}
-  }
-
-  // ── seta select pelo texto da opção ───────────────────────────────────────
-  function fillSel(id,val,map){
-    if(val==null)return;
-    var el=document.getElementById(id);
-    if(!el)return;
-    var v=val.trim().toLowerCase();
-    // tenta mapa de conversão primeiro
-    if(map){
-      for(var mk in map){
-        if(v.indexOf(mk.toLowerCase())>=0){
-          for(var oi=0;oi<el.options.length;oi++){
-            if(el.options[oi].text===map[mk]||el.options[oi].value===map[mk]){el.selectedIndex=oi;filled++;return;}
-          }
-        }
-      }
-    }
-    // tenta match direto
-    for(var i=0;i<el.options.length;i++){
-      if(el.options[i].text.toLowerCase()===v||el.options[i].value.toLowerCase()===v){el.selectedIndex=i;filled++;return;}
-    }
-    // tenta match parcial
-    for(var j=0;j<el.options.length;j++){
-      if(el.options[j].text.toLowerCase().indexOf(v)>=0||v.indexOf(el.options[j].text.toLowerCase())>=0){el.selectedIndex=j;filled++;return;}
-    }
-  }
-
-  // ── seta campo monetário ───────────────────────────────────────────────────
-  function fillMoney(id,val){
-    var n=toNum(val);
-    if(n==null||n<=0)return;
-    var el=document.getElementById(id);
-    if(el){el.value=n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});filled++;}
-  }
-
-  // ══ DADOS PESSOAIS ═════════════════════════════════════════════════════════
-  fill('fc-nome',   get('Nome do Solicitante'));
-  fill('fc-cpf',    get('CPF'));
-  fill('fc-tel',    get('Telefone'));
-  fill('fc-email',  get(['E-mail','Email']));
-  fill('fc-prof',   get('Profissão'));
-  fill('fc-nac',    get('Nacionalidade'));
-
-  var nat=get('Naturalidade');
-  if(nat){
-    // normaliza "Alto Garças mt" → "Alto Garças / MT"
-    var natParts=nat.split(/\s+/);
-    var ufCand=natParts[natParts.length-1];
-    if(ufCand.length===2&&/^[a-zA-Z]+$/.test(ufCand)){
-      fill('fc-nat',natParts.slice(0,-1).join(' ')+' / '+ufCand.toUpperCase());
-    } else {
-      fill('fc-nat',nat);
-    }
-  }
-
-  var dob=toISO(get('Data de Nascimento'));
-  if(dob){var el=document.getElementById('fc-nasc');if(el){el.value=dob;filled++;}}
-
-  fillSel('fc-ec', get('Estado Civil'),{
-    'solteiro':'Solteiro(a)','casado':'Casado(a)','divorciado':'Divorciado(a)',
-    'viuvo':'Viúvo(a)','viúvo':'Viúvo(a)','uniao':'União Estável','união':'União Estável'
-  });
-
-  // ══ IMÓVEL EM GARANTIA (unificado com endereço) ═══════════════════════════
-  fill('fc-cepIm',     get(['CEP do Imóvel em Garantia','CEP do Imovel em Garantia','CEP do imóvel','CEP do imovel','CEP']));
-  fill('fc-cidadeIm',  get(['Cidade do Imóvel em Garantia','Cidade do Imovel em Garantia','Cidade do imóvel','Cidade do imovel','Cidade']));
-  fill('fc-logradouro',get(['Rua do Imóvel em Garantia','Rua do Imovel em Garantia','Logradouro','Rua','Avenida']));
-  fill('fc-bairro',    get(['Bairro do Imóvel em Garantia','Bairro do Imovel em Garantia','Bairro']));
-  fill('fc-num',       get(['Número do Imóvel em Garantia','Numero do Imovel em Garantia','Número','Numero','Nº']));
-
-  // UF: aceita sigla ou nome por extenso
-  var ufIm=get(['Estado do Imóvel em Garantia','Estado do Imovel em Garantia','UF do Imóvel em Garantia','Estado do imóvel','UF','Estado']);
-  if(ufIm){
-    var ufMap={'acre':'AC','alagoas':'AL','amapá':'AP','amapa':'AP','amazonas':'AM','bahia':'BA',
-      'ceará':'CE','ceara':'CE','distrito federal':'DF','espírito santo':'ES','espirito santo':'ES',
-      'goiás':'GO','goias':'GO','maranhão':'MA','maranhao':'MA','mato grosso do sul':'MS',
-      'mato grosso':'MT','minas gerais':'MG','pará':'PA','para':'PA','paraíba':'PB','paraiba':'PB',
-      'paraná':'PR','parana':'PR','pernambuco':'PE','piauí':'PI','piaui':'PI',
-      'rio de janeiro':'RJ','rio grande do norte':'RN','rio grande do sul':'RS',
-      'rondônia':'RO','rondonia':'RO','roraima':'RR','santa catarina':'SC',
-      'são paulo':'SP','sao paulo':'SP','sergipe':'SE','tocantins':'TO'};
-    var ufNorm=ufIm.trim();
-    if(ufNorm.length===2){fill('fc-ufIm',ufNorm.toUpperCase());}
-    else{var sig=ufMap[ufNorm.toLowerCase()];if(sig)fill('fc-ufIm',sig);else fill('fc-ufIm',ufNorm);}
-  }
-
-  // Classificação do Imóvel
-  var classIm=get('Classificação do Imóvel');
-  fillSel('fc-classIm', classIm, {
-    'residencial':'Residencial','comercial':'Comercial'
-  });
-
-  // Tipo do Imóvel
-  var tipoIm=get('Tipo do Imóvel');
-  fillSel('fc-tipoIm', tipoIm, {
-    'apartamento':'Apartamento',
-    'casa rua':'Casa fora de Condomínio',
-    'casa fora':'Casa fora de Condomínio',
-    'casa condominio':'Casa em Condomínio','casa condomínio':'Casa em Condomínio',
-    'sala comercial':'Sala Comercial','sala':'Sala Comercial',
-    'loja':'Loja','galpão':'Galpão','galp':'Galpão','terreno':'Terreno'
-  });
-
-  // Regularização
-  var reg=get('Imóvel Regularizado');
-  if(reg){
-    var regSit=get('Situação da Regularização');
-    var regSel=document.getElementById('fc-reg');
-    if(regSel){
-      if(/não|nao/i.test(reg)){regSel.selectedIndex=2;filled++;}
-      else if(regSit&&/atualizar|parcial/i.test(regSit)){regSel.selectedIndex=1;filled++;}
-      else{regSel.selectedIndex=0;filled++;}
-    }
-  }
-
-  // ══ CRÉDITO ═══════════════════════════════════════════════════════════════
-  fillMoney('fc-vlIm',  get(['Valor do Imóvel em Garantia','Valor do Imóvel']));
-  fillMoney('fc-vlCred',get(['Valor do Crédito Solicitado','Valor do Crédito']));
-  fill('fc-motivo',     get('Motivo do Crédito'));
-
-  var parcStr=get('Número de Parcelas');
-  if(parcStr){
-    var parcNum=parseInt(parcStr);
-    var parcSel=document.getElementById('fc-parcelas');
-    if(parcSel&&parcNum){
-      for(var pi=0;pi<parcSel.options.length;pi++){
-        if(parseInt(parcSel.options[pi].value)===parcNum){parcSel.selectedIndex=pi;filled++;break;}
-      }
-    }
-  }
-
-  // ══ ATIVIDADE PROFISSIONAL ════════════════════════════════════════════════
-  var ocup=get('Ocupação');
-  fillSel('fc-ocup', ocup, {
-    'assalariado privado':'Assalariado (CLT)','assalariado':'Assalariado (CLT)',
-    'clt':'Assalariado (CLT)',
-    'autonomo':'Autônomo / Profissional Liberal','autônomo':'Autônomo / Profissional Liberal',
-    'profissional liberal':'Autônomo / Profissional Liberal',
-    'empresario':'Empresário','empresário':'Empresário',
-    'socio':'Empresário','sócio':'Empresário',
-    'servidor':'Servidor Público',
-    'aposentado':'Aposentado / Pensionista','pensionista':'Aposentado / Pensionista'
-  });
-
-  fill('fc-func',    get('Quantidade de Funcionários'));
-  fill('fc-clientes',get('Principais Clientes'));
-  fill('fc-serv',    get(['Serviços/Produtos oferecidos','Serviços Produtos oferecidos']));
-  fill('fc-site',    get('Redes Sociais'));
-
-  fillSel('fc-sede', get('Condição da Sede da Empresa'),{
-    'propria':'Própria','própria':'Própria','alugada':'Alugada'
-  });
-
-  fillMoney('fc-fat',  get('Faturamento Mensal'));
-  fillMoney('fc-custo',get('Custo Fixo Mensal'));
-
-  // Emite NF: se tem comissão ou é PJ deduz Sim
-  var comissao=get('Comissão');
-  var pjpf=get(['Retiradas da empresa são creditadas na conta PF ou PJ?','Retiradas da empresa']); 
-  var nfVal='Não';
-  if(comissao&&/sim/i.test(comissao)) nfVal='Sim';
-  if(pjpf&&/pj/i.test(pjpf)) nfVal='Sim';
-  fillSel('fc-nf',null);
-  var nfEl=document.getElementById('fc-nf');
-  if(nfEl){for(var ni=0;ni<nfEl.options.length;ni++){if(nfEl.options[ni].text===nfVal){nfEl.selectedIndex=ni;break;}}}
-
-  // ══ FEEDBACK ═════════════════════════════════════════════════════════════
-  calcularLiquidoFicha();
-  st.innerHTML='<span style="color:var(--green)">✓ '+filled+' campo(s) preenchido(s). Confira e complete os dados faltantes.</span>';
-  showToast(filled+' campos preenchidos!','success');
 }
 function preencherExemplo(){
   document.getElementById('dataNasc').value='1976-01-09';

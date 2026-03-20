@@ -341,6 +341,59 @@ hr{border:none;border-top:1px solid var(--border);margin:1.5rem 0}
 
 .bank-card.made-card{border-color:rgba(224,169,76,0.35);background:rgba(224,169,76,0.04)}
 
+
+/* ── MOBILE RESPONSIVO ── */
+@media (max-width: 768px){
+  .shell{grid-template-columns:1fr!important}
+  .sidebar{
+    position:fixed;top:0;left:-280px;width:270px;height:100vh;
+    z-index:500;transition:left 0.3s ease;box-shadow:4px 0 20px var(--shadow)
+  }
+  .sidebar.open{left:0}
+  .main{padding:1rem!important;padding-top:60px!important}
+  .result-cols{grid-template-columns:1fr!important}
+  .metrics{grid-template-columns:1fr 1fr!important}
+  .form-grid.cols-3{grid-template-columns:1fr 1fr!important}
+  .form-grid.cols-2{grid-template-columns:1fr!important}
+  .span-2{grid-column:span 1!important}
+  .page-header{flex-direction:column;gap:10px}
+  .tabs{flex-wrap:wrap}
+  .tab{flex:1;text-align:center;font-size:12px;padding:6px 8px}
+  .bc-stats5{grid-template-columns:1fr 1fr!important;gap:10px!important}
+  .bc-stats5 .bc-stat5:last-child{grid-column:span 2}
+  .profile-grid{grid-template-columns:1fr 1fr!important}
+  .fichas-grid{grid-template-columns:1fr!important}
+  .btn-row{flex-direction:column}
+  .btn-row .btn{width:100%;text-align:center}
+  .ai-tabs{flex-wrap:wrap}
+  /* Top bar mobile */
+  .mobile-topbar{
+    display:flex!important;
+    position:fixed;top:0;left:0;right:0;height:52px;
+    background:var(--bg2);border-bottom:1px solid var(--border);
+    align-items:center;padding:0 1rem;gap:10px;z-index:400
+  }
+  .mobile-menu-btn{
+    width:36px;height:36px;border:none;background:none;cursor:pointer;
+    color:var(--text);font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0
+  }
+  .mobile-title{
+    font-family:'Times New Roman',Times,serif;font-size:18px;
+    font-weight:700;color:var(--gold);flex:1
+  }
+  .mobile-overlay{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);
+    z-index:499
+  }
+  .mobile-overlay.active{display:block}
+  /* Login mobile */
+  .login-box{margin:1rem;padding:1.5rem}
+}
+@media (min-width:769px){
+  .mobile-topbar{display:none!important}
+  .mobile-overlay{display:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -368,6 +421,13 @@ hr{border:none;border-top:1px solid var(--border);margin:1.5rem 0}
 
 <!-- APP (shown after login) -->
 <div id="app-shell">
+<!-- TOP BAR MOBILE -->
+<div class="mobile-topbar" id="mobile-topbar">
+  <button class="mobile-menu-btn" onclick="toggleSidebarMobile()" aria-label="Menu">☰</button>
+  <span class="mobile-title">Money Flow</span>
+  <button class="theme-toggle" onclick="toggleTheme()" style="width:32px;height:32px;border-radius:50%;border:0.5px solid var(--border2);background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text2)">🌙</button>
+</div>
+<div class="mobile-overlay" id="mobile-overlay" onclick="toggleSidebarMobile()"></div>
 <div class="shell">
 
 <!-- SIDEBAR -->
@@ -875,6 +935,7 @@ function tentarLogin(){
         document.getElementById('login-screen').style.display='none';
         document.getElementById('app-shell').style.display='grid';
         renderSidebar();renderFichasSection();atualizarPillIA();
+        switchMain('simulador');
       });
       return;
     }
@@ -882,6 +943,7 @@ function tentarLogin(){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app-shell').style.display='grid';
     renderSidebar();renderFichasSection();atualizarPillIA();
+    switchMain('simulador');
   } else {
     document.getElementById('login-erro').style.display='block';
     document.getElementById('login-pass').value='';
@@ -1014,7 +1076,7 @@ var LTV_MAX=0.50,IOF=0.0338,TAC_BPO=4500,ALIQ_TAC=0.004,TX_ADM=25,COMP_MAX=0.33;
 function getFichas(){try{return JSON.parse(localStorage.getItem('mf_fichas')||'[]');}catch(e){return[];}}
 function saveFichas(f){localStorage.setItem('mf_fichas',JSON.stringify(f));}
 function gerarId(){return 'fc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);}
-function getApiKey(){return 'claude-integrated';}
+function getApiKey(){return localStorage.getItem('mf_openai_key')||'';}
 function renderKeyStatus(){}
 function atualizarPillIA(){}
 
@@ -1625,24 +1687,52 @@ function simular(){
 async function gerarAnaliseIA(){
   var d=window._lastDados,r=window._lastRes;
   if(!d){showToast('Simule primeiro.','');return;}
+  var apiKey=localStorage.getItem('mf_openai_key')||'';
+  if(!apiKey){
+    showToast('Configure a chave OpenAI em Configurar IA','error');
+    switchMain('config');
+    return;
+  }
   var btn=document.getElementById('btn-gerar-ia');
   var container=document.getElementById('ai-analysis-container');
   btn.disabled=true;btn.textContent='Analisando...';
-  container.innerHTML='<div class="ai-block"><div class="ai-block-header"><div class="ai-icon">✦</div><div><div class="ai-block-title">Análise em andamento</div><div class="ai-block-sub">Claude lendo o perfil...</div></div></div><div class="ai-loading"><div class="ai-dots"><span></span><span></span><span></span></div><span>Gerando parecer e devolutiva...</span></div></div>';
-  var aprovStr=r.aprovados.map(function(a){return a.b.nome+' ('+a.b.taxa+'%a.m., parcela '+brl(a.parcelaB)+', comp.'+(d.renda>0?pct(a.compBruto,1):'N/I')+')';}).join('; ')||'nenhum';
-  var reprStr=r.reprovados.map(function(rp){return rp.b.nome+': '+rp.motivos.join(', ');}).join('; ')||'nenhum';
+  container.innerHTML='<div class="ai-block"><div class="ai-block-header"><div class="ai-icon">✦</div><div><div class="ai-block-title">Análise em andamento</div><div class="ai-block-sub">GPT-4o mini lendo o perfil...</div></div></div><div class="ai-loading"><div class="ai-dots"><span></span><span></span><span></span></div><span>Gerando parecer e devolutiva...</span></div></div>';
+  var aprovStr=(r.aprovados||[]).map(function(a){return a.b.nome+' ('+a.b.taxa+'%a.m., parcela '+brl(a.parcelaB)+')';}).join('; ')||'nenhum';
+  var reprStr=(r.reprovados||[]).map(function(rp){return rp.b.nome+': '+rp.motivos.join(', ');}).join('; ')||'nenhum';
   var aprovado=(r.rendaOkPrice||r.rendaOkSAC)&&r.ltvOk;
-  var prompt='Você é especialista sênior em crédito imobiliário brasileiro, home equity. Analise o perfil abaixo e retorne SOMENTE um JSON válido (sem markdown, sem texto fora do JSON) com as chaves "parecer_interno" e "devolutiva_cliente".\n\nPERFIL: '+d.nome+' | '+d.ocupacao+' | Renda '+brl(d.renda)+'/mês | '+d.estadoCivil+' | NF:'+d.emiteNF+'\nIMÓVEL: '+d.tipoIm+' | '+brl(d.valorImovel)+' | LTV '+pct(r.ltv,1)+'\nCRÉDITO: '+brl(d.valorCredito)+' | Total '+brl(r.totalFin)+' | '+pct(r.taxa,2)+'a.m. | '+d.prazo+'m\nPRICE: '+brl(r.parcelaPrice)+' | comp.'+pct(r.compPrice,1)+' | '+(r.rendaOkPrice&&r.ltvOk?'ELEGÍVEL':'REPROVADO')+'\nSAC: '+brl(r.sac1Val)+' | comp.'+pct(r.compSAC,1)+' | '+(r.rendaOkSAC&&r.ltvOk?'ELEGÍVEL':'REPROVADO')+'\nBANCOS APROVADOS: '+aprovStr+'\nBANCOS REPROVADOS: '+reprStr+'\n\nparecer_interno: análise técnica detalhada para o consultor (pontos fortes, riscos, recomendações).\ndevolutiva_cliente: texto amigável para enviar ao cliente por WhatsApp ou e-mail.';
+  var nomeC=(d.nome||'cliente').split(' ')[0];
+  var sysP='Você é especialista sênior em crédito imobiliário brasileiro, home equity. Responda SEMPRE em JSON válido, sem markdown.';
+  var userP='Analise e retorne JSON com "parecer_interno" e "devolutiva_cliente".\n'
+    +'PERFIL: '+(d.nome||'N/I')+' | '+(d.ocupacao||'')+' | Renda '+brl(d.renda||0)+'/mes | '+(d.estadoCivil||'')+'\n'
+    +'IMOVEL: '+(d.tipoIm||'')+' | '+brl(d.valorImovel||0)+' | LTV '+pct(r.ltv,1)+'\n'
+    +'CREDITO: '+brl(d.valorCredito||0)+' | Total '+brl(r.totalFin||0)+' | '+pct(r.taxa,2)+'am | '+d.prazo+'m\n'
+    +'PRICE: '+brl(r.parcelaPrice||0)+' | comp.'+pct(r.compPrice||0,1)+' | '+(r.rendaOkPrice&&r.ltvOk?'ELEGIVEL':'REPROVADO')+'\n'
+    +'SAC: '+brl(r.sac1Val||0)+' | comp.'+pct(r.compSAC||0,1)+' | '+(r.rendaOkSAC&&r.ltvOk?'ELEGIVEL':'REPROVADO')+'\n'
+    +'BANCOS APROVADOS: '+aprovStr+'\n'
+    +'BANCOS REPROVADOS: '+reprStr+'\n'
+    +'parecer_interno: analise tecnica para o consultor. devolutiva_cliente: texto para WhatsApp/email para '+nomeC+'.';
   try{
-    var resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
-        messages:[{role:'user',content:prompt}]})});
+    var resp=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+      body:JSON.stringify({
+        model:'gpt-4o-mini',
+        max_tokens:1500,
+        temperature:0.4,
+        response_format:{type:'json_object'},
+        messages:[{role:'system',content:sysP},{role:'user',content:userP}]
+      })
+    });
     if(!resp.ok){var err=await resp.json();throw new Error((err.error&&err.error.message)||'Erro '+resp.status);}
     var data=await resp.json();
-    var raw=data.content.map(function(i){return i.text||'';}).join('');
+    var raw=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content||'{}';
     var clean=raw.replace(/```json|```/g,'').trim();
-    var parsed=JSON.parse(clean);
+    var parsed;
+    try{parsed=JSON.parse(clean);}
+    catch(e2){
+      // Se JSON inválido, criar objeto manualmente com o raw
+      parsed={parecer_interno:clean,devolutiva_cliente:'Não foi possível gerar a devolutiva automaticamente.'};
+    }
     renderAIBlock(parsed,d,r);
     btn.textContent='✦ Regenerar análise';btn.disabled=false;
   }catch(e){
@@ -1650,6 +1740,7 @@ async function gerarAnaliseIA(){
     btn.textContent='✦ Gerar análise com IA';btn.disabled=false;
   }
 }
+
 function renderAIBlock(parsed,d,r){
   var container=document.getElementById('ai-analysis-container');
   var aprovado=(r.rendaOkPrice||r.rendaOkSAC)&&r.ltvOk;
@@ -1949,9 +2040,35 @@ function excluirFichaConfirmado(){
   showToast('Ficha excluída.','');
 }
 
+
+// ── MOBILE SIDEBAR ───────────────────────────────────────────────────────────
+function toggleSidebarMobile(){
+  var sb=document.querySelector('.sidebar');
+  var ov=document.getElementById('mobile-overlay');
+  if(!sb||!ov)return;
+  var isOpen=sb.classList.contains('open');
+  sb.classList.toggle('open',!isOpen);
+  ov.classList.toggle('active',!isOpen);
+}
+function fecharSidebarMobile(){
+  var sb=document.querySelector('.sidebar');
+  var ov=document.getElementById('mobile-overlay');
+  if(sb)sb.classList.remove('open');
+  if(ov)ov.classList.remove('active');
+}
+// Fechar sidebar ao clicar em item do menu no mobile
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('.nav-item,.ficha-item').forEach(function(el){
+    el.addEventListener('click',function(){
+      if(window.innerWidth<=768)fecharSidebarMobile();
+    });
+  });
+});
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
 if(localStorage.getItem('mf_logado')==='1'){
   renderSidebar();renderFichasSection();atualizarPillIA();
+  switchMain('simulador');
 }
 
 

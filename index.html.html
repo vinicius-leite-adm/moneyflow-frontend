@@ -929,7 +929,7 @@ var LTV_MAX=0.50,IOF=0.0338,TAC_BPO=4500,ALIQ_TAC=0.004,TX_ADM=25,COMP_MAX=0.33;
 function getFichas(){try{return JSON.parse(localStorage.getItem('mf_fichas')||'[]');}catch(e){return[];}}
 function saveFichas(f){localStorage.setItem('mf_fichas',JSON.stringify(f));}
 function gerarId(){return 'fc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);}
-var GROQ_KEY_DEFAULT='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';
+var GROQ_KEY_DEFAULT='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';
 function getApiKey(){return localStorage.getItem('mf_anthropic_key')||GROQ_KEY_DEFAULT;}
 function salvarApiKey(){
   var v=document.getElementById('apiKeyInput').value.trim();
